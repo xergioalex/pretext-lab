@@ -4,12 +4,12 @@
   import { onMount } from 'svelte';
 
   const cellTexts = [
-    'Typography is the art and technique of arranging type to make written language legible and appealing.',
-    'Good design is as little design as possible. Less, but better, because it concentrates on the essential aspects.',
-    'The details are not the details. They make the design. Every pixel matters in the craft of visual communication.',
-    'White space is to be regarded as an active element, not a passive background. It shapes meaning and hierarchy.',
-    'Type is a beautiful group of letters, not a group of beautiful letters. Harmony comes from the whole.',
-    'Simplicity is the ultimate sophistication. Clear typography speaks louder than decorative excess.',
+    'Typography is the art and technique of arranging type to make written language legible and appealing. Good letterforms respect the reader.',
+    'Good design is as little design as possible. Less, but better, because it concentrates on the essential aspects. Every detail must be justified.',
+    'The details are not the details. They make the design. Every pixel matters in the craft of visual communication and typographic precision.',
+    'White space is to be regarded as an active element, not a passive background. It shapes meaning, hierarchy, and the rhythm of reading.',
+    'Type is a beautiful group of letters, not a group of beautiful letters. Harmony comes from the whole composition working together.',
+    'Simplicity is the ultimate sophistication. Clear typography speaks louder than decorative excess. Restraint reveals intent.',
   ];
 
   const seedColors = [
@@ -50,8 +50,8 @@
         const idx = r * cols + c;
         if (idx >= cellTexts.length) break;
         seeds.push({
-          x: cellW * c + cellW / 2 + (Math.random() - 0.5) * cellW * 0.3,
-          y: cellH * r + cellH / 2 + (Math.random() - 0.5) * cellH * 0.3,
+          x: cellW * c + cellW / 2,
+          y: cellH * r + cellH / 2,
           baseX: cellW * c + cellW / 2,
           baseY: cellH * r + cellH / 2,
           text: cellTexts[idx],
@@ -62,46 +62,38 @@
     }
   }
 
-  // For each scan line y, find cell boundaries
-  function getCellBounds(y: number): Array<{ seedIdx: number; left: number; right: number }> {
-    const step = 4; // pixel precision for boundary detection
-    const assignments: number[] = [];
+  // Find which seed owns pixel (x,y)
+  function nearestSeed(x: number, y: number): number {
+    let minDist = Infinity;
+    let closest = 0;
+    for (let s = 0; s < seeds.length; s++) {
+      const dx = x - seeds[s].x;
+      const dy = y - seeds[s].y;
+      const dist = dx * dx + dy * dy;
+      if (dist < minDist) {
+        minDist = dist;
+        closest = s;
+      }
+    }
+    return closest;
+  }
+
+  // Find cell left/right bounds for a seed at a given y
+  function getCellBoundsForSeed(seedIdx: number, y: number): { left: number; right: number } | null {
+    const step = 8;
+    let left = canvasWidth;
+    let right = 0;
+    let found = false;
 
     for (let x = 0; x < canvasWidth; x += step) {
-      let minDist = Infinity;
-      let closest = 0;
-      for (let s = 0; s < seeds.length; s++) {
-        const dx = x - seeds[s].x;
-        const dy = y - seeds[s].y;
-        const dist = dx * dx + dy * dy;
-        if (dist < minDist) {
-          minDist = dist;
-          closest = s;
-        }
-      }
-      assignments.push(closest);
-    }
-
-    // Extract runs
-    const bounds: Array<{ seedIdx: number; left: number; right: number }> = [];
-    const seen = new Map<number, { left: number; right: number }>();
-
-    for (let i = 0; i < assignments.length; i++) {
-      const s = assignments[i];
-      const px = i * step;
-      if (!seen.has(s)) {
-        seen.set(s, { left: px, right: px + step });
-      } else {
-        const b = seen.get(s)!;
-        b.right = px + step;
+      if (nearestSeed(x, y) === seedIdx) {
+        if (x < left) left = x;
+        if (x + step > right) right = x + step;
+        found = true;
       }
     }
 
-    seen.forEach((val, seedIdx) => {
-      bounds.push({ seedIdx, left: val.left, right: Math.min(val.right, canvasWidth) });
-    });
-
-    return bounds;
+    return found ? { left, right: Math.min(right, canvasWidth) } : null;
   }
 
   let currentCanvasWidth = 0;
@@ -123,9 +115,7 @@
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    if (canvasWidth !== currentCanvasWidth) {
-      resizeCanvas();
-    }
+    if (canvasWidth !== currentCanvasWidth) resizeCanvas();
 
     const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
 
@@ -133,29 +123,19 @@
     ctx.fillStyle = isDark ? '#08080e' : '#f5f5fa';
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Draw Voronoi cells by pixel scanning (coarse)
-    const cellStep = 8;
+    // Draw Voronoi cell tints (coarse grid)
+    const cellStep = 12;
     for (let y = 0; y < canvasHeight; y += cellStep) {
       for (let x = 0; x < canvasWidth; x += cellStep) {
-        let minDist = Infinity;
-        let closest = 0;
-        for (let s = 0; s < seeds.length; s++) {
-          const dx = x - seeds[s].x;
-          const dy = y - seeds[s].y;
-          const dist = dx * dx + dy * dy;
-          if (dist < minDist) {
-            minDist = dist;
-            closest = s;
-          }
-        }
-        ctx.fillStyle = seeds[closest].color + '0a';
+        const c = nearestSeed(x, y);
+        ctx.fillStyle = seeds[c].color + '12';
         ctx.fillRect(x, y, cellStep, cellStep);
       }
     }
 
-    // Draw cell boundaries (using squared distances to avoid Math.sqrt)
-    const boundaryStep = 2;
-    const boundaryColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+    // Draw cell boundaries (medium grid)
+    const boundaryStep = 4;
+    const boundaryColor = isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.14)';
     ctx.fillStyle = boundaryColor;
     for (let y = 0; y < canvasHeight; y += boundaryStep) {
       for (let x = 0; x < canvasWidth; x += boundaryStep) {
@@ -172,9 +152,6 @@
             secondDist2 = dist2;
           }
         }
-        // sqrt(second) - sqrt(min) < 3  is equivalent to  (second - min)^2 < 9 * (second + min + 2*sqrt(second*min))
-        // Approximate without sqrt: (secondDist2 - minDist2) < 6 * sqrt(minDist2)
-        // Squaring both sides: (secondDist2 - minDist2)^2 < 36 * minDist2
         const diff = secondDist2 - minDist2;
         if (diff * diff < 36 * minDist2) {
           ctx.fillRect(x, y, boundaryStep, boundaryStep);
@@ -195,25 +172,21 @@
       const prepared = prepareWithSegments(seed.text, font);
       let cursor: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 };
 
-      // Find cell vertical extent: scan from top to bottom
-      // For each line of text, find the cell width at that y
-      const cellTop = 10;
-      const cellBottom = canvasHeight - 10;
-
-      let y = cellTop;
+      // Start text near the seed's vertical position, offset up
+      const startY = Math.max(10, seed.y - 60);
+      let y = startY;
       let safety = 0;
 
-      while (y < cellBottom && safety < 100) {
+      while (y < canvasHeight - 10 && safety < 40) {
         safety++;
 
-        // Find cell bounds at this y
         const bounds = getCellBoundsForSeed(si, y);
         if (!bounds || bounds.right - bounds.left < fontSize * 2) {
           y += lh;
           continue;
         }
 
-        const availWidth = bounds.right - bounds.left - 8; // padding
+        const availWidth = bounds.right - bounds.left - 12;
         if (availWidth < fontSize) {
           y += lh;
           continue;
@@ -223,7 +196,7 @@
         if (!line) break;
 
         ctx.fillStyle = isDark ? '#e0e0e8' : '#1a1a2e';
-        ctx.fillText(line.text, bounds.left + 4, y);
+        ctx.fillText(line.text, bounds.left + 6, y);
 
         cursor = line.end;
         lineTotal++;
@@ -233,10 +206,16 @@
 
     totalLines = lineTotal;
 
-    // Draw seed points
+    // Draw seed points (on top)
     for (const seed of seeds) {
+      // Glow
       ctx.beginPath();
-      ctx.arc(seed.x, seed.y, 6, 0, Math.PI * 2);
+      ctx.arc(seed.x, seed.y, 14, 0, Math.PI * 2);
+      ctx.fillStyle = seed.color + '30';
+      ctx.fill();
+      // Point
+      ctx.beginPath();
+      ctx.arc(seed.x, seed.y, 7, 0, Math.PI * 2);
       ctx.fillStyle = seed.color;
       ctx.fill();
       ctx.strokeStyle = isDark ? '#fff' : '#000';
@@ -245,45 +224,19 @@
     }
   }
 
-  function getCellBoundsForSeed(seedIdx: number, y: number): { left: number; right: number } | null {
-    const step = 6;
-    let left = canvasWidth;
-    let right = 0;
-    let found = false;
-
-    for (let x = 0; x < canvasWidth; x += step) {
-      let minDist = Infinity;
-      let closest = 0;
-      for (let s = 0; s < seeds.length; s++) {
-        const dx = x - seeds[s].x;
-        const dy = y - seeds[s].y;
-        const dist = dx * dx + dy * dy;
-        if (dist < minDist) {
-          minDist = dist;
-          closest = s;
-        }
-      }
-      if (closest === seedIdx) {
-        if (x < left) left = x;
-        if (x + step > right) right = x + step;
-        found = true;
-      }
-    }
-
-    return found ? { left, right: Math.min(right, canvasWidth) } : null;
-  }
-
   function tick() {
     if (animating) {
-      time += 0.01;
-      // Slowly orbit seeds around their base positions
+      time += 0.016;
       for (let i = 0; i < seeds.length; i++) {
         const seed = seeds[i];
         if (!seed.dragging) {
-          const orbitRadius = 30;
-          const speed = 0.3;
-          seed.x = seed.baseX + Math.cos(time * speed + i * 1.2) * orbitRadius;
-          seed.y = seed.baseY + Math.sin(time * speed * 0.7 + i * 1.5) * orbitRadius * 0.6;
+          const orbitRadius = 60;
+          const speed = 0.6;
+          seed.x = seed.baseX + Math.cos(time * speed + i * 1.05) * orbitRadius;
+          seed.y = seed.baseY + Math.sin(time * speed * 0.8 + i * 1.4) * orbitRadius * 0.5;
+          // Clamp to canvas
+          seed.x = Math.max(20, Math.min(canvasWidth - 20, seed.x));
+          seed.y = Math.max(20, Math.min(canvasHeight - 20, seed.y));
         }
       }
     }
