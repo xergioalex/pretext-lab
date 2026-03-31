@@ -1,6 +1,6 @@
 <script lang="ts">
   import { prepareWithSegments, layoutWithLines, buildFont, SAMPLE_TEXTS } from '../../lib/pretext';
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
 
   const defaultText = SAMPLE_TEXTS.long;
 
@@ -96,11 +96,7 @@
 
   $effect(() => {
     text; fontSize; maxWidth;
-    computeLayout();
-  });
-
-  onMount(() => {
-    computeLayout();
+    untrack(() => computeLayout());
   });
 
   function getHeatColor(value: number, min: number, max: number): string {
