@@ -1,250 +1,359 @@
 <script lang="ts">
-  import { prepareWithSegments, layoutNextLine, buildFont, SAMPLE_TEXTS } from '../../lib/pretext';
-  import type { LayoutCursor } from '../../lib/pretext';
+  import { prepareWithSegments, layoutWithLines, buildFont, SAMPLE_TEXTS } from '../../lib/pretext';
   import { onMount } from 'svelte';
 
-  interface SeaLine {
-    text: string;
+  const text = `${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.long}`;
+
+  let canvas: HTMLCanvasElement;
+  let wrapperWidth = $state(0);
+  let canvasWidth = $derived(wrapperWidth > 0 ? wrapperWidth : 800);
+  const canvasHeight = 560;
+  let waveStrength = $state(50);
+  let waveSpeed = $state(1.2);
+  let wind = $state(40);
+  let fontSize = $state(14);
+  let animFrame = 0;
+  let phase = 0;
+  let currentCanvasWidth = 0;
+
+  interface Letter {
+    char: string;
     x: number;
     y: number;
+    targetY: number;
+    vy: number;
     width: number;
+    baseX: number;
     hue: number;
-    foam: number;
-    waveShift: number;
   }
 
-  const regattaText = `Across the gulf the measured lines rose and fell like disciplined surf. ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.medium} The vessel did not float above the paragraph; it negotiated with it, cutting a wake through language as if typography itself had become tide, pressure, weather, and route.`;
+  let letters: Letter[] = [];
+  let boatX = 0;
+  let boatY = 0;
+  let boatTilt = 0;
+  let letterCount = $state(0);
 
-  let wrapperWidth = $state(0);
-  let fontSize = $state(15);
-  let swell = $state(60);
-  let wake = $state(76);
-  let wind = $state(58);
-  let showGuides = $state(false);
-  let autoPilot = $state(true);
+  function initLetters() {
+    const font = buildFont(fontSize, 'Inter, sans-serif');
+    const lh = Math.round(fontSize * 1.4);
+    const prepared = prepareWithSegments(text, font);
+    const result = layoutWithLines(prepared, canvasWidth - 40, lh);
 
-  let phase = 0;
-  let frameHandle = 0;
-  let boatX = $state(0);
-  let boatY = $state(0);
-  let boatTilt = $state(0);
-  let seaLines: SeaLine[] = $state([]);
-  let seaHeight = $state(520);
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d')!;
+    tempCtx.font = font;
 
-  const lineHeight = $derived(Math.round(fontSize * 1.62));
-  const stageWidth = $derived(Math.max(320, Math.min(wrapperWidth || 920, 980)));
+    letters = [];
+    // Place letters densely to fill the "ocean" area (bottom 65% of canvas)
+    const oceanTop = canvasHeight * 0.35;
 
-  function clamp(v: number, min: number, max: number) { return Math.max(min, Math.min(max, v)); }
-  function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
+    for (let li = 0; li < result.lines.length; li++) {
+      const line = result.lines[li];
+      let x = 20;
+      // Stack letters in rows filling the ocean zone
+      const row = li;
+      const baseY = oceanTop + (row % 18) * (fontSize + 2) + Math.random() * 4;
 
-  function computeSea() {
-    const width = stageWidth;
-    const height = 480;
-    const margin = 24;
-    const usableWidth = width - margin * 2;
-    const font = buildFont(fontSize, 'Georgia, Times New Roman, serif');
-    const prepared = prepareWithSegments(regattaText, font);
-    const result: SeaLine[] = [];
-    let cursor: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 };
-    let y = 30;
-    let safety = 0;
-
-    while (safety < 600 && y < height) {
-      safety++;
-      const midY = y + lineHeight / 2;
-      const yNorm = midY / height;
-
-      // Ocean swell — gentle undulation of line positions
-      const swellPrimary = Math.sin(yNorm * Math.PI * 4.2 + phase) * swell * 0.4;
-      const swellSecondary = Math.cos(yNorm * Math.PI * 7.4 - phase * 0.68) * swell * 0.12;
-      const currentShift = Math.sin(yNorm * Math.PI * 2.3 + phase * 0.42) * wind * 0.12;
-
-      // Wake — subtle line displacement near the boat (NOT a void)
-      const dy = midY - boatY;
-      const wakeFactor = Math.exp(-((dy * dy) / (1800 + wake * 20)));
-      const wakeDisplace = wakeFactor * wake * 0.15;
-
-      // Lines fill the full width — wake only shifts them slightly
-      let xStart = margin + Math.max(0, swellPrimary * 0.15 + currentShift * 0.3);
-      let availableWidth = usableWidth - Math.abs(swellPrimary + swellSecondary) * 0.3 - Math.abs(currentShift) * 0.2;
-
-      // Near the boat: gently compress width and shift x (not create a gap)
-      const dxBoat = (boatX - (margin + usableWidth / 2)) / usableWidth;
-      xStart += wakeDisplace * dxBoat * 0.8;
-      availableWidth -= wakeDisplace * 0.5;
-
-      xStart = clamp(xStart, margin - 4, margin + usableWidth * 0.15);
-      availableWidth = clamp(availableWidth, usableWidth * 0.5, usableWidth);
-
-      const line = layoutNextLine(prepared, cursor, availableWidth);
-      if (!line) break;
-
-      const foamIntensity = clamp(wakeFactor * (0.5 + Math.sin(yNorm * 16 + phase * 2.4) * 0.2), 0, 1);
-
-      result.push({
-        text: line.text,
-        x: xStart,
-        y,
-        width: line.width,
-        hue: lerp(196, 218, clamp(yNorm + wakeFactor * 0.05, 0, 1)),
-        foam: foamIntensity,
-        waveShift: swellPrimary + swellSecondary + currentShift,
-      });
-
-      cursor = line.end;
-      y += lineHeight;
+      for (const char of line.text) {
+        if (char === ' ') { x += fontSize * 0.3; continue; }
+        const charW = tempCtx.measureText(char).width;
+        letters.push({
+          char,
+          x: x + (Math.random() - 0.5) * 6,
+          y: baseY + Math.random() * 20,
+          targetY: baseY,
+          vy: 0,
+          width: charW,
+          baseX: x,
+          hue: 190 + Math.random() * 40, // ocean blues
+        });
+        x += charW + 0.5;
+      }
     }
+    letterCount = letters.length;
+    boatX = canvasWidth * 0.3;
+  }
 
-    seaLines = result;
-    seaHeight = Math.max(520, y + 40);
+  function getWaveSurface(x: number): number {
+    // Multi-frequency wave at position x
+    const xNorm = x / canvasWidth;
+    const w1 = Math.sin(xNorm * Math.PI * 3 + phase) * waveStrength * 0.7;
+    const w2 = Math.sin(xNorm * Math.PI * 5.5 - phase * 0.7) * waveStrength * 0.3;
+    const w3 = Math.cos(xNorm * Math.PI * 8 + phase * 1.3) * waveStrength * 0.15;
+    const windPush = Math.sin(xNorm * Math.PI * 2 + phase * 0.3) * wind * 0.2;
+    return canvasHeight * 0.38 + w1 + w2 + w3 + windPush;
   }
 
   function tick() {
-    if (!autoPilot) return;
-    phase += 0.018 * (0.45 + wind / 85);
+    phase += 0.02 * waveSpeed;
 
-    const route = (Math.sin(phase * 0.62) + 1) / 2;
-    boatX = lerp(stageWidth * 0.2, stageWidth * 0.8, route);
-    boatY = 160 + Math.sin(phase * 1.14) * 60 + Math.cos(phase * 0.56) * 20;
-    boatTilt = Math.sin(phase * 1.9) * 6 + (wind - 50) * 0.06;
+    // Update letter positions — they follow the wave surface
+    for (const l of letters) {
+      const surface = getWaveSurface(l.x);
+      // Letters settle into rows below the wave surface
+      const depth = (l.y - surface);
+      if (depth < 0) {
+        // Above surface: push down
+        l.vy += 0.8;
+      } else {
+        // Below surface: damped spring toward a layered target
+        const layerOffset = ((l.baseX * 7.3) % (fontSize * 12));
+        l.targetY = surface + (layerOffset % (canvasHeight * 0.55));
+        l.vy += (l.targetY - l.y) * 0.03;
+      }
+      l.vy *= 0.92; // damping
+      l.y += l.vy;
 
-    computeSea();
-    frameHandle = requestAnimationFrame(tick);
+      // Gentle horizontal sway from wind
+      l.x += Math.sin(phase + l.baseX * 0.01) * wind * 0.005;
+
+      // Keep in bounds
+      if (l.y > canvasHeight + 10) l.y = canvasHeight;
+      if (l.x < -20) l.x = canvasWidth + 10;
+      if (l.x > canvasWidth + 20) l.x = -10;
+    }
+
+    // Boat follows wave surface
+    boatX += wind * 0.015;
+    if (boatX > canvasWidth + 60) boatX = -60;
+    const surfaceAtBoat = getWaveSurface(boatX);
+    boatY += (surfaceAtBoat - fontSize * 2 - boatY) * 0.12; // smooth follow
+    const slopeLeft = getWaveSurface(boatX - 20);
+    const slopeRight = getWaveSurface(boatX + 20);
+    const targetTilt = Math.atan2(slopeRight - slopeLeft, 40) * (180 / Math.PI);
+    boatTilt += (targetTilt - boatTilt) * 0.1;
+
+    render();
+    animFrame = requestAnimationFrame(tick);
+  }
+
+  function resizeCanvas() {
+    if (!canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvasWidth * dpr;
+    canvas.height = canvasHeight * dpr;
+    canvas.style.width = canvasWidth + 'px';
+    canvas.style.height = canvasHeight + 'px';
+    const ctx = canvas.getContext('2d');
+    if (ctx) ctx.scale(dpr, dpr);
+    currentCanvasWidth = canvasWidth;
+  }
+
+  function render() {
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    if (canvasWidth !== currentCanvasWidth) resizeCanvas();
+
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+
+    // Sky gradient
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, canvasHeight * 0.4);
+    if (isDark) {
+      skyGrad.addColorStop(0, '#0a1628');
+      skyGrad.addColorStop(1, '#0f2440');
+    } else {
+      skyGrad.addColorStop(0, '#87CEEB');
+      skyGrad.addColorStop(1, '#b0d8f0');
+    }
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+    // Ocean background below wave surface
+    const oceanGrad = ctx.createLinearGradient(0, canvasHeight * 0.35, 0, canvasHeight);
+    if (isDark) {
+      oceanGrad.addColorStop(0, '#0c2a4a');
+      oceanGrad.addColorStop(0.5, '#081c34');
+      oceanGrad.addColorStop(1, '#05111f');
+    } else {
+      oceanGrad.addColorStop(0, '#4a9fd4');
+      oceanGrad.addColorStop(0.5, '#3080b8');
+      oceanGrad.addColorStop(1, '#1a5a8a');
+    }
+    ctx.fillStyle = oceanGrad;
+    ctx.fillRect(0, canvasHeight * 0.32, canvasWidth, canvasHeight * 0.68);
+
+    // Draw wave surface line
+    ctx.beginPath();
+    ctx.moveTo(0, getWaveSurface(0));
+    for (let x = 4; x <= canvasWidth; x += 4) {
+      ctx.lineTo(x, getWaveSurface(x));
+    }
+    ctx.strokeStyle = isDark ? 'rgba(120, 200, 255, 0.3)' : 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Draw all letters (the ocean body)
+    const font = buildFont(fontSize, 'Inter, sans-serif');
+    ctx.font = font;
+    ctx.textBaseline = 'top';
+
+    for (const l of letters) {
+      const surface = getWaveSurface(l.x);
+      const depth = l.y - surface;
+      const aboveSurface = depth < 0;
+
+      if (aboveSurface) {
+        // Spray/splash letters above surface — brighter, smaller opacity
+        const alpha = Math.max(0.1, 0.6 - Math.abs(depth) * 0.015);
+        ctx.fillStyle = isDark
+          ? `hsla(${l.hue}, 80%, 80%, ${alpha})`
+          : `hsla(${l.hue}, 70%, 40%, ${alpha})`;
+      } else {
+        // Submerged letters — fade with depth
+        const depthFade = Math.max(0.15, 1 - depth * 0.003);
+        const lightness = isDark ? 65 + depth * 0.02 : 35 - depth * 0.01;
+        ctx.fillStyle = isDark
+          ? `hsla(${l.hue}, 75%, ${Math.min(80, lightness)}%, ${depthFade})`
+          : `hsla(${l.hue}, 60%, ${Math.max(20, lightness)}%, ${depthFade})`;
+      }
+
+      ctx.fillText(l.char, l.x, l.y);
+    }
+
+    // Draw foam at wave crests
+    ctx.fillStyle = isDark ? 'rgba(200, 240, 255, 0.15)' : 'rgba(255, 255, 255, 0.3)';
+    for (let x = 0; x < canvasWidth; x += 8) {
+      const s = getWaveSurface(x);
+      const next = getWaveSurface(x + 8);
+      if (s < next) { // crest
+        ctx.fillRect(x, s - 1, 8, 2);
+      }
+    }
+
+    // Draw boat ON TOP
+    ctx.save();
+    ctx.translate(boatX, boatY);
+    ctx.rotate(boatTilt * Math.PI / 180);
+
+    // Hull shadow
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+    ctx.beginPath();
+    ctx.ellipse(0, 22, 30, 6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Hull
+    ctx.beginPath();
+    ctx.moveTo(-28, 4);
+    ctx.quadraticCurveTo(-20, 18, -12, 18);
+    ctx.lineTo(12, 18);
+    ctx.quadraticCurveTo(20, 18, 28, 4);
+    ctx.lineTo(22, 12);
+    ctx.quadraticCurveTo(0, 20, -22, 12);
+    ctx.closePath();
+    const hullGrad = ctx.createLinearGradient(-28, 0, 28, 18);
+    hullGrad.addColorStop(0, '#2a3652');
+    hullGrad.addColorStop(1, '#1a2238');
+    ctx.fillStyle = hullGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#4a5a80';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Mast
+    ctx.beginPath();
+    ctx.moveTo(0, -42);
+    ctx.lineTo(0, 6);
+    ctx.strokeStyle = '#c8c8d8';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Main sail
+    ctx.beginPath();
+    ctx.moveTo(0, -40);
+    ctx.quadraticCurveTo(22 + wind * 0.1, -12, 18, 2);
+    ctx.lineTo(0, 2);
+    ctx.closePath();
+    const sailGrad = ctx.createLinearGradient(0, -40, 18, 2);
+    sailGrad.addColorStop(0, '#fff8e0');
+    sailGrad.addColorStop(1, '#f0d898');
+    ctx.fillStyle = sailGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#e8d8a0';
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+
+    // Jib
+    ctx.beginPath();
+    ctx.moveTo(0, -32);
+    ctx.quadraticCurveTo(-14 - wind * 0.06, -8, -12, 2);
+    ctx.lineTo(0, 2);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(180, 210, 255, 0.85)';
+    ctx.fill();
+
+    // Portholes
+    ctx.fillStyle = '#70c8ff';
+    ctx.beginPath(); ctx.arc(-6, 10, 1.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6, 10, 1.5, 0, Math.PI * 2); ctx.fill();
+
+    ctx.restore();
+
+    // Wake trail behind boat
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.strokeStyle = isDark ? '#88d4ff' : '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < 80; i++) {
+      const wx = boatX - i * 2 - 30;
+      const wy = getWaveSurface(wx) + Math.sin(i * 0.3 + phase * 3) * (2 + i * 0.08);
+      if (i === 0) ctx.moveTo(wx, wy); else ctx.lineTo(wx, wy);
+    }
+    ctx.stroke();
+    ctx.restore();
   }
 
   onMount(() => {
-    boatX = stageWidth * 0.35;
-    boatY = 180;
-    computeSea();
-    frameHandle = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frameHandle);
-  });
-
-  $effect(() => {
-    stageWidth; fontSize; swell; wake; wind;
-    if (!autoPilot) computeSea();
+    initLetters();
+    resizeCanvas();
+    boatX = canvasWidth * 0.3;
+    boatY = canvasHeight * 0.32;
+    tick();
+    return () => cancelAnimationFrame(animFrame);
   });
 </script>
 
 <div class="regatta-demo" bind:clientWidth={wrapperWidth}>
   <div class="controls-bar">
     <div class="ctrl">
+      <label>Waves <span>{waveStrength}</span></label>
+      <input type="range" min="10" max="100" bind:value={waveStrength} />
+    </div>
+    <div class="ctrl">
+      <label>Speed <span>{waveSpeed.toFixed(1)}x</span></label>
+      <input type="range" min="0.3" max="3" step="0.1" bind:value={waveSpeed} />
+    </div>
+    <div class="ctrl">
       <label>Wind <span>{wind}</span></label>
-      <input type="range" min="10" max="100" bind:value={wind} />
-    </div>
-    <div class="ctrl">
-      <label>Swell <span>{swell}px</span></label>
-      <input type="range" min="20" max="150" bind:value={swell} />
-    </div>
-    <div class="ctrl">
-      <label>Wake <span>{wake}</span></label>
-      <input type="range" min="20" max="120" bind:value={wake} />
+      <input type="range" min="5" max="80" bind:value={wind} />
     </div>
     <div class="ctrl">
       <label>Font <span>{fontSize}px</span></label>
-      <input type="range" min="12" max="19" bind:value={fontSize} />
+      <input type="range" min="10" max="20" bind:value={fontSize} oninput={() => initLetters()} />
     </div>
-    <button class="toggle-btn" class:on={autoPilot} onclick={() => { autoPilot = !autoPilot; if (autoPilot) tick(); else cancelAnimationFrame(frameHandle); }}>
-      {autoPilot ? 'Autopilot on' : 'Autopilot off'}
-    </button>
-    <button class="toggle-btn" class:on={showGuides} onclick={() => (showGuides = !showGuides)}>
-      {showGuides ? 'Guides on' : 'Guides off'}
-    </button>
   </div>
 
   <div class="stats-row">
-    <span class="stat-pill accent">{seaLines.length} water lines</span>
-    <span class="stat-pill">boat sails on text</span>
-    <span class="stat-pill">swell + wake + current</span>
+    <span class="stat-pill accent">{letterCount} ocean letters</span>
+    <span class="stat-pill">wave physics + boat dynamics</span>
+    <span class="stat-pill">wind drives sail + current</span>
   </div>
 
-  <div class="regatta-stage" style={`height:${seaHeight}px;`}>
-    <!-- Sky / horizon -->
-    <div class="horizon"></div>
-    <div class="sun-glow"></div>
-
-    <!-- Text as water — fills the whole container -->
-    {#each seaLines as line, index}
-      {#if showGuides}
-        <div
-          class="line-guide"
-          style={`left:${line.x}px;top:${line.y + lineHeight * 0.72}px;width:${line.width}px;opacity:${0.12 + line.foam * 0.18};`}
-        ></div>
-      {/if}
-
-      {#if line.foam > 0.15 && index % 2 === 0}
-        <div
-          class="foam-line"
-          style={`left:${line.x}px;top:${line.y + lineHeight * 0.84}px;width:${line.width}px;opacity:${line.foam * 0.6};`}
-        ></div>
-      {/if}
-
-      <div
-        class="water-line"
-        style={`left:${line.x}px;top:${line.y}px;font-size:${fontSize}px;line-height:${lineHeight}px;color:hsl(${line.hue} 78% ${lerp(60, 78, line.foam)}%);transform:translateX(${line.waveShift * 0.04}px);`}
-      >
-        {line.text}
-      </div>
-    {/each}
-
-    <!-- Boat ON TOP of the text water -->
-    <div
-      class="boat"
-      style={`left:${boatX}px;top:${boatY}px;transform:translate(-50%, -50%) rotate(${boatTilt}deg);`}
-    >
-      <svg width="120" height="88" viewBox="0 0 120 88" aria-label="Sailboat navigating the text sea">
-        <defs>
-          <linearGradient id="sailGlow" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#fff8dd" />
-            <stop offset="100%" stop-color="#f1d8a2" />
-          </linearGradient>
-          <linearGradient id="hullPaint" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#2a3145" />
-            <stop offset="100%" stop-color="#111723" />
-          </linearGradient>
-        </defs>
-        <!-- Water reflection under hull -->
-        <ellipse cx="60" cy="74" rx="38" ry="8" fill="rgba(103, 213, 255, 0.25)" />
-        <!-- Mast -->
-        <path d="M57 12 L57 62" stroke="#d6d9e8" stroke-width="2.5" stroke-linecap="round" />
-        <!-- Main sail -->
-        <path d="M57 14 L84 52 L57 52 Z" fill="url(#sailGlow)" stroke="#f4e7bc" stroke-width="1" />
-        <!-- Jib sail -->
-        <path d="M55 24 L36 56 L55 56 Z" fill="#b7d6ff" fill-opacity="0.88" stroke="#d7ebff" stroke-width="1" />
-        <!-- Hull -->
-        <path d="M22 62 C38 67, 82 67, 98 62 L90 76 C76 80, 46 80, 30 76 Z" fill="url(#hullPaint)" stroke="#4c5a7d" stroke-width="1.5" />
-        <!-- Portholes -->
-        <circle cx="50" cy="68" r="2" fill="#82d9ff" />
-        <circle cx="64" cy="68" r="2" fill="#82d9ff" />
-      </svg>
-    </div>
-
-    <!-- Wake trail behind boat -->
-    <div
-      class="wake-ribbon"
-      style={`left:${boatX - 140}px;top:${boatY + 10}px;width:${120 + wake * 0.8}px;opacity:${0.12 + wake * 0.003};transform:rotate(${boatTilt * 0.3}deg);`}
-    ></div>
+  <div class="canvas-wrap">
+    <canvas bind:this={canvas}></canvas>
   </div>
 </div>
 
 <style>
   .regatta-demo { display: flex; flex-direction: column; gap: var(--space-md); }
-
   .controls-bar { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: end; }
-  .ctrl { display: flex; flex-direction: column; gap: 4px; min-width: 90px; }
+  .ctrl { display: flex; flex-direction: column; gap: 4px; min-width: 80px; }
   .ctrl label {
     font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--text-muted);
   }
   .ctrl label span { color: var(--accent); font-family: var(--font-mono); }
-
-  .toggle-btn {
-    padding: 7px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
-    background: var(--bg-card); color: var(--text-muted); font-size: 0.76rem;
-    font-weight: 600; font-family: var(--font-body); cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-  .toggle-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
 
   .stats-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .stat-pill {
@@ -254,72 +363,14 @@
   }
   .stat-pill.accent { color: var(--accent); border-color: var(--border-accent); }
 
-  .regatta-stage {
-    position: relative; overflow: hidden; border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    background:
-      radial-gradient(circle at 50% 8%, rgba(255, 230, 164, 0.18), transparent 16%),
-      linear-gradient(180deg, #0f1f39 0%, #10284d 20%, #0c3d69 45%, #0a3358 65%, #081b2d 100%);
-    box-shadow: 0 14px 60px rgba(0, 0, 0, 0.35);
+  .canvas-wrap {
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.2);
   }
-
-  :global([data-theme="light"]) .regatta-stage {
-    background:
-      radial-gradient(circle at 50% 8%, rgba(255, 200, 100, 0.2), transparent 16%),
-      linear-gradient(180deg, #c8ddf0 0%, #a8c8e8 20%, #88b8dc 45%, #78a8cc 65%, #6898b8 100%);
-    box-shadow: 0 14px 60px rgba(0, 0, 0, 0.12);
-  }
-
-  .horizon {
-    position: absolute; left: 0; right: 0; top: 80px; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255, 225, 173, 0.5), transparent);
-  }
-
-  .sun-glow {
-    position: absolute; top: 14px; left: 50%; width: 200px; height: 100px;
-    transform: translateX(-50%);
-    background: radial-gradient(ellipse, rgba(255, 224, 153, 0.3), transparent 70%);
-    pointer-events: none;
-  }
-
-  .line-guide {
-    position: absolute; height: 1px;
-    border-bottom: 1px dashed rgba(176, 236, 255, 0.45);
-    pointer-events: none;
-  }
-
-  .foam-line {
-    position: absolute; height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(227, 248, 255, 0.8), transparent);
-    filter: blur(0.4px); pointer-events: none;
-  }
-
-  .water-line {
-    position: absolute; white-space: nowrap;
-    font-family: Georgia, 'Times New Roman', serif;
-    text-shadow: 0 0 12px rgba(92, 212, 255, 0.12);
-    pointer-events: none;
-  }
-
-  :global([data-theme="light"]) .water-line {
-    text-shadow: 0 0 8px rgba(30, 100, 160, 0.1);
-  }
-
-  /* Boat renders ON TOP of text */
-  .boat {
-    position: absolute; z-index: 10;
-    pointer-events: none;
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
-  }
-
-  .wake-ribbon {
-    position: absolute; z-index: 5; height: 24px; border-radius: 999px;
-    background: linear-gradient(90deg, rgba(188, 240, 255, 0.25), rgba(188, 240, 255, 0.05), transparent);
-    filter: blur(4px); pointer-events: none;
-  }
+  canvas { display: block; width: 100%; }
 
   @media (max-width: 600px) {
-    .ctrl { min-width: 70px; }
+    .ctrl { min-width: 60px; }
     .controls-bar { gap: var(--space-sm); }
   }
 </style>
