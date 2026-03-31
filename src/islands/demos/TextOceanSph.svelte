@@ -67,19 +67,19 @@
       for (const c of line.text) { if (c !== ' ') allChars.push(c); }
     }
 
-    // Fill a block across the full width, in the bottom 40%
+    // Start particles spread across the top — they'll fall and settle
     particles = [];
     const margin = 8;
     const w = canvasWidth - margin * 2;
-    const cols = Math.ceil(Math.sqrt(PARTICLE_COUNT * 2));
+    const cols = Math.ceil(Math.sqrt(PARTICLE_COUNT * 2.5));
     const spacing = Math.min(w / cols, 8);
     const actualCols = Math.floor(w / spacing);
 
     for (let i = 0; i < PARTICLE_COUNT; i++) {
       const col = i % actualCols;
       const row = Math.floor(i / actualCols);
-      const x = margin + col * spacing + spacing * 0.5 + (Math.random() - 0.5) * 2;
-      const y = canvasHeight - margin - row * spacing - spacing * 0.5 + (Math.random() - 0.5) * 2;
+      const x = margin + col * spacing + spacing * 0.5 + (Math.random() - 0.5) * 3;
+      const y = row * spacing + (Math.random() - 0.5) * 3 - 20; // start above canvas
       particles.push({
         x, y, px: x, py: y,
         char: allChars[i % allChars.length],
