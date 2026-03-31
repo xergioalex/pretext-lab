@@ -14,38 +14,160 @@ const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title={`${title} — Pretext Mini-Lab`} description={summary}>
-  <div class="demo-page container">
-    <a href={base} class="back-link">&larr; Back to all demos</a>
-
-    <div class="demo-header">
-      <div class="demo-meta">
-        <span class="badge">{difficulty}</span>
-        {apis.map((api) => (
-          <code class="api-tag">{api}</code>
-        ))}
+  <!-- Fullscreen mode (default) -->
+  <div class="demo-fullscreen" id="demo-fullscreen">
+    <div class="fs-topbar">
+      <a href={base} class="fs-back" title="Back to all demos">&larr;</a>
+      <span class="fs-title">{title}</span>
+      <div class="fs-actions">
+        <span class="fs-badge">{difficulty}</span>
+        <button class="fs-toggle-btn" id="fs-exit-btn" title="Exit fullscreen (Esc)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/></svg>
+          <span>Exit fullscreen</span>
+        </button>
       </div>
-      <h1>{title}</h1>
-      <p class="summary">{summary}</p>
-      <p class="context">{context}</p>
     </div>
+    <div class="fs-content" id="fs-content">
+      <slot />
+    </div>
+  </div>
 
-    <slot />
+  <!-- Normal mode (hidden initially) -->
+  <div class="demo-normal" id="demo-normal" style="display:none;">
+    <div class="demo-page container">
+      <div class="normal-topbar">
+        <a href={base} class="back-link">&larr; Back to all demos</a>
+        <button class="fs-toggle-btn" id="fs-enter-btn" title="Enter fullscreen">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18-5h-3a2 2 0 0 0-2 2v3m0 8v3a2 2 0 0 0 2 2h3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+          <span>Fullscreen</span>
+        </button>
+      </div>
+
+      <div class="demo-header">
+        <div class="demo-meta">
+          <span class="badge">{difficulty}</span>
+          {apis.map((api) => (
+            <code class="api-tag">{api}</code>
+          ))}
+        </div>
+        <h1>{title}</h1>
+        <p class="summary">{summary}</p>
+        <p class="context">{context}</p>
+      </div>
+
+      <div id="normal-content"></div>
+    </div>
   </div>
 </BaseLayout>
 
 <style>
+  /* ===== FULLSCREEN ===== */
+  .demo-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .fs-topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 0 var(--space-md);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-nav);
+    backdrop-filter: blur(12px);
+    flex-shrink: 0;
+    height: 42px;
+  }
+
+  .fs-back {
+    font-size: 1rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    line-height: 1;
+  }
+  .fs-back:hover { color: var(--accent); }
+
+  .fs-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .fs-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-shrink: 0;
+  }
+
+  .fs-badge {
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: var(--accent-dim);
+    color: var(--accent);
+    border: 1px solid var(--border-accent);
+  }
+
+  .fs-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all var(--transition-fast);
+  }
+  .fs-toggle-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .fs-content {
+    flex: 1;
+    overflow: auto;
+    padding: var(--space-md);
+  }
+
+  /* ===== NORMAL ===== */
+  .demo-page {
+    padding: var(--space-xl) 0 var(--space-4xl);
+  }
+
+  .normal-topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xl);
+  }
+
   .back-link {
-    display: inline-block;
     font-size: 0.85rem;
     color: var(--text-muted);
     text-decoration: none;
-    margin-bottom: var(--space-xl);
     transition: color var(--transition-fast);
   }
-
-  .back-link:hover {
-    color: var(--accent);
-  }
+  .back-link:hover { color: var(--accent); }
 
   .demo-meta {
     display: flex;
@@ -64,3 +186,54 @@ const base = import.meta.env.BASE_URL;
     color: var(--text-secondary);
   }
 </style>
+
+<script>
+  const fsEl = document.getElementById('demo-fullscreen')!;
+  const normalEl = document.getElementById('demo-normal')!;
+  const fsContent = document.getElementById('fs-content')!;
+  const normalContent = document.getElementById('normal-content')!;
+  const exitBtn = document.getElementById('fs-exit-btn')!;
+  const enterBtn = document.getElementById('fs-enter-btn')!;
+
+  const mainNav = document.querySelector('nav.nav') as HTMLElement | null;
+  const mainFooter = document.querySelector('footer.footer') as HTMLElement | null;
+  const mobileMenu = document.querySelector('.mobile-menu') as HTMLElement | null;
+
+  function setFullscreen(on: boolean) {
+    if (on) {
+      // Move content to fullscreen
+      while (normalContent.firstChild) {
+        fsContent.appendChild(normalContent.firstChild);
+      }
+      fsEl.style.display = 'flex';
+      normalEl.style.display = 'none';
+      if (mainNav) mainNav.style.display = 'none';
+      if (mainFooter) mainFooter.style.display = 'none';
+      if (mobileMenu) mobileMenu.style.display = 'none';
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Move content to normal
+      while (fsContent.firstChild) {
+        normalContent.appendChild(fsContent.firstChild);
+      }
+      fsEl.style.display = 'none';
+      normalEl.style.display = 'block';
+      if (mainNav) mainNav.style.display = '';
+      if (mainFooter) mainFooter.style.display = '';
+      if (mobileMenu) mobileMenu.style.display = '';
+      document.body.style.overflow = '';
+    }
+  }
+
+  exitBtn.addEventListener('click', () => setFullscreen(false));
+  enterBtn.addEventListener('click', () => setFullscreen(true));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setFullscreen(false);
+  });
+
+  // Start in fullscreen — hide nav/footer immediately
+  if (mainNav) mainNav.style.display = 'none';
+  if (mainFooter) mainFooter.style.display = 'none';
+  if (mobileMenu) mobileMenu.style.display = 'none';
+  document.body.style.overflow = 'hidden';
+</script>
