@@ -43,5 +43,6 @@ export const demoIcons: Record<string, string> = {
   'incremental-layout-profiler': '📊',
   'topology-morph': '🧬',
   'text-regatta': '⛵',
+  'text-particle-pool': '🫧',
   'text-ocean-sph': '🌊',
 };

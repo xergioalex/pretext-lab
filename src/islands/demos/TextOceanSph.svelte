@@ -98,20 +98,23 @@
       }
     }
 
-    // Create particles in a block at the bottom — they will settle under gravity
+    // Spread particles evenly across the bottom half of the canvas
     particles = [];
-    const cols = Math.ceil(Math.sqrt(particleCount * 2.5));
-    const spacing = 6;
-    const startX = canvasWidth * 0.05;
-    const startY = canvasHeight * 0.45;
+    const margin = 10;
+    const usableW = canvasWidth - margin * 2;
+    const cols = Math.ceil(Math.sqrt(particleCount * (usableW / (canvasHeight * 0.45))));
+    const rows = Math.ceil(particleCount / cols);
+    const spacingX = usableW / cols;
+    const spacingY = (canvasHeight * 0.45) / rows;
+    const startY = canvasHeight * 0.52;
 
     for (let i = 0; i < particleCount; i++) {
       const col = i % cols;
       const row = Math.floor(i / cols);
       particles.push({
-        x: startX + col * spacing + (Math.random() - 0.5) * 2,
-        y: startY + row * spacing + (Math.random() - 0.5) * 2,
-        vx: 0,
+        x: margin + col * spacingX + spacingX * 0.5 + (Math.random() - 0.5) * spacingX * 0.3,
+        y: startY + row * spacingY + (Math.random() - 0.5) * spacingY * 0.3,
+        vx: (Math.random() - 0.5) * 10,
         vy: 0,
         char: allChars[i % allChars.length],
         density: 0,
@@ -120,7 +123,7 @@
 
     displayCount = particles.length;
     boatX = canvasWidth * 0.5;
-    boatY = canvasHeight * 0.35;
+    boatY = startY - 30;
     boatVx = 0;
     boatVy = 0;
     boatAngle = 0;
@@ -235,25 +238,22 @@
       if (p.y < margin) { p.y = margin; p.vy *= -0.1; }
     }
 
-    // Boat physics — floats on particle surface
-    // Find average particle Y near the boat (buoyancy)
+    // Boat physics — find the surface level (topmost particles) near the boat
+    let minYnear = canvasHeight;
     let nearCount = 0;
-    let avgParticleY = canvasHeight;
     for (let i = 0; i < n; i++) {
-      const dx = particles[i].x - boatX;
-      if (Math.abs(dx) < boatWidth * 0.7) {
-        if (particles[i].y < boatY + 30 && particles[i].y > boatY - 60) {
-          avgParticleY += particles[i].y;
-          nearCount++;
-        }
+      const dx = Math.abs(particles[i].x - boatX);
+      if (dx < boatWidth) {
+        if (particles[i].y < minYnear) minYnear = particles[i].y;
+        if (particles[i].y < boatY + 40) nearCount++;
       }
     }
-    if (nearCount > 5) {
-      avgParticleY = avgParticleY / (nearCount + 1);
-      const targetY = avgParticleY - boatHeight;
-      boatVy += (targetY - boatY) * 3 * dt;
+    if (nearCount > 3) {
+      // Float on the surface — target just above the topmost particle
+      const targetY = minYnear - boatHeight * 0.8;
+      boatVy += (targetY - boatY) * 5 * dt;
     } else {
-      boatVy += gravity * 0.3 * dt; // fall if no particles
+      boatVy += gravity * 0.4 * dt;
     }
 
     // Boat auto-movement

@@ -1,0 +1,67 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import TextParticlePoolIsland from '../../islands/demos/TextParticlePool.svelte';
+---
+
+<DemoLayout
+  slug="text-particle-pool"
+  title="Text Particle Pool"
+  summary="Characters rain down, pile up with physics collisions, and accumulate into a pool you can push around."
+  context="Every character is an independent physics particle with gravity, bounce, and collision detection. Letters spawn from the top, fall, bounce off walls and the floor, collide with each other, and gradually pile up. Move your mouse to repel the accumulated letters — watch them scatter and resettle."
+  apis={['prepareWithSegments()', 'layoutWithLines()']}
+  difficulty="Spectacular"
+  snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+
+// Extract characters from text
+const prepared = prepareWithSegments(text, '12px Inter');
+const lines = layoutWithLines(prepared, width, 14).lines;
+const chars = lines.flatMap(l => [...l.text].filter(c => c !== ' '));
+
+// Each character → physics particle
+particles.push({
+  char: chars[i],
+  x: random() * width,   // spawn across top
+  y: -10,                 // above canvas
+  vx: (random()-0.5) * 60,
+  vy: random() * 30,
+  settled: false,
+});
+
+// Physics loop:
+// 1. Gravity:   vy += gravity * dt
+// 2. Floor:     bounce with restitution
+// 3. Walls:     bounce off left/right
+// 4. Collisions: push overlapping particles apart
+// 5. Settle:    mark as settled when velocity near zero
+// 6. Mouse:     repel particles within radius`}
+>
+  <div class="demo-area" slot="demo">
+    <TextParticlePoolIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info" slot="info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Text as physical matter. Characters extracted via <code>layoutWithLines()</code> become independent
+        particles with gravity, bounce, and inter-particle collision. They accumulate into a pool that
+        responds to mouse interaction — push, scatter, and watch them resettle.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments(text, font)</code> — prepare text for character extraction</li>
+        <li><code>layoutWithLines(prepared, width, lh)</code> — get lines to iterate characters</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is impressive</h3>
+      <p>
+        Up to 4000 character particles with real-time collision detection, gravity, bounce, and mouse
+        interaction at 60fps. Each particle retains its identity as a specific letter from the original text.
+        The pool naturally forms an organic pile shape from pure physics.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

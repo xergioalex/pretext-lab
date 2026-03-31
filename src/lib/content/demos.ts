@@ -381,6 +381,16 @@ export const demos: DemoMeta[] = [
     difficulty: 'Flagship',
   },
   {
+    slug: 'text-particle-pool',
+    title: 'Text Particle Pool',
+    summary: 'Characters rain down, pile up with physics collisions, and accumulate into a pool you can push around.',
+    category: 'spectacular',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutWithLines()'],
+    difficulty: 'Spectacular',
+  },
+  {
     slug: 'text-ocean-sph',
     title: 'Text Ocean SPH',
     summary: 'Thousands of character particles form a fluid ocean via SPH simulation — a boat floats on the letter waves.',
