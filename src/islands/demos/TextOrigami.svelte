@@ -82,6 +82,22 @@
     panelLayout = nextPanels;
   }
 
+  function updateFolds(event: Event) {
+    folds = (event.currentTarget as HTMLInputElement).valueAsNumber;
+  }
+
+  function updatePanels(event: Event) {
+    panels = (event.currentTarget as HTMLInputElement).valueAsNumber;
+  }
+
+  function nudgeFolds(delta: number) {
+    folds = clamp(folds + delta, 0, 90);
+  }
+
+  function nudgePanels(delta: number) {
+    panels = clamp(panels + delta, 3, 6);
+  }
+
   $effect(() => {
     wrapperWidth;
     folds;
@@ -94,11 +110,19 @@
   <div class="controls-bar">
     <div class="ctrl">
       <label>Fold depth <span>{folds}%</span></label>
-      <input type="range" min="0" max="90" bind:value={folds} />
+      <div class="range-row">
+        <button class="nudge-btn" onclick={() => nudgeFolds(-6)} aria-label="Decrease fold depth">-</button>
+        <input type="range" min="0" max="90" bind:value={folds} oninput={updateFolds} />
+        <button class="nudge-btn" onclick={() => nudgeFolds(6)} aria-label="Increase fold depth">+</button>
+      </div>
     </div>
     <div class="ctrl">
       <label>Panels <span>{panels}</span></label>
-      <input type="range" min="3" max="6" step="1" bind:value={panels} />
+      <div class="range-row">
+        <button class="nudge-btn" onclick={() => nudgePanels(-1)} aria-label="Decrease panel count">-</button>
+        <input type="range" min="3" max="6" step="1" bind:value={panels} oninput={updatePanels} />
+        <button class="nudge-btn" onclick={() => nudgePanels(1)} aria-label="Increase panel count">+</button>
+      </div>
     </div>
     <button class="toggle-btn" class:on={showCreases} onclick={() => (showCreases = !showCreases)}>Creases</button>
   </div>
@@ -134,11 +158,19 @@
   .origami-demo { display: flex; flex-direction: column; gap: var(--space-md); width: 100%; min-width: 0; }
   .controls-bar { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: end; }
   .ctrl { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
+  .range-row { display: flex; align-items: center; gap: 8px; }
+  .range-row input[type="range"] { flex: 1; min-width: 0; }
   .ctrl label {
     font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
     letter-spacing: 0.06em; color: var(--text-muted);
   }
   .ctrl label span { color: var(--accent); font-family: var(--font-mono); }
+  .nudge-btn {
+    width: 28px; height: 28px; flex-shrink: 0;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; font-size: 1rem; line-height: 1; font-family: var(--font-body);
+  }
   .toggle-btn {
     padding: 7px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border);
     background: var(--bg-card); color: var(--text-muted); cursor: pointer;
