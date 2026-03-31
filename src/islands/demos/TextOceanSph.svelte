@@ -14,7 +14,7 @@
   let pressure = $state(45);
   let viscosity = $state(0.9);
   let waveForce = $state(60);
-  let particleCount = $state(7500);
+  let particleCount = $state(2500);
   let mouseRepel = $state(true);
   let animFrame = 0;
   let currentCanvasWidth = 0;
