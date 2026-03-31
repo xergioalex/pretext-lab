@@ -246,7 +246,7 @@
     }
   }
 
-  function getCanvasPos(e: MouseEvent): { x: number; y: number } {
+  function getCanvasPos(e: MouseEvent | Touch): { x: number; y: number } {
     const rect = canvas.getBoundingClientRect();
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   }
@@ -277,6 +277,37 @@
   }
 
   function onMouseUp() {
+    dragging = null;
+  }
+
+  function onTouchStart(e: TouchEvent) {
+    e.preventDefault();
+    const pos = getCanvasPos(e.touches[0]);
+    for (let i = blocks.length - 1; i >= 0; i--) {
+      const b = blocks[i];
+      if (pos.x >= b.x && pos.x <= b.x + b.width && pos.y >= b.y && pos.y <= b.y + b.height) {
+        dragging = { block: b, offsetX: pos.x - b.x, offsetY: pos.y - b.y, lastX: pos.x, lastY: pos.y };
+        b.vx = 0;
+        b.vy = 0;
+        b.va = 0;
+        break;
+      }
+    }
+  }
+
+  function onTouchMove(e: TouchEvent) {
+    e.preventDefault();
+    if (!dragging) return;
+    const pos = getCanvasPos(e.touches[0]);
+    dragging.block.x = pos.x - dragging.offsetX;
+    dragging.block.y = pos.y - dragging.offsetY;
+    dragging.block.vx = (pos.x - dragging.lastX) * 0.5;
+    dragging.block.vy = (pos.y - dragging.lastY) * 0.5;
+    dragging.lastX = pos.x;
+    dragging.lastY = pos.y;
+  }
+
+  function onTouchEnd() {
     dragging = null;
   }
 
@@ -326,6 +357,9 @@
       onmousemove={onMouseMove}
       onmouseup={onMouseUp}
       onmouseleave={onMouseUp}
+      ontouchstart={onTouchStart}
+      ontouchmove={onTouchMove}
+      ontouchend={onTouchEnd}
     ></canvas>
   </div>
 </div>

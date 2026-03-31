@@ -175,7 +175,7 @@
     </div>
     <div class="ctrl">
       <label>Height <span>{hourglassHeight}px</span></label>
-      <input type="range" min="400" max="700" bind:value={hourglassHeight} />
+      <input type="range" min="300" max="700" bind:value={hourglassHeight} />
     </div>
     <div class="ctrl">
       <label>Neck <span>{neckWidth}px</span></label>
@@ -319,5 +319,13 @@
     color: var(--text-primary);
     pointer-events: none;
     transition: opacity 0.3s ease;
+  }
+
+  @media (max-width: 600px) {
+    .hourglass-demo { gap: var(--space-sm); }
+    .controls-bar { gap: var(--space-sm); }
+    .hourglass-canvas { box-shadow: 0 6px 30px rgba(0,0,0,0.3); }
+    .wave-stats { gap: 4px; }
+    .stat-pill { padding: 2px 8px; font-size: 0.7rem; }
   }
 </style>

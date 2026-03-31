@@ -6,7 +6,7 @@
   const fullText = SAMPLE_TEXTS.long;
 
   let wrapperWidth = $state(0);
-  let containerWidth = $state(700);
+  let containerWidth = $derived(wrapperWidth > 0 ? Math.min(wrapperWidth - 16, 900) : 700);
   let fontSize = $state(15);
   let lineHeight = $derived(fontSize * 1.6);
   let faultAngle = $state(10);
@@ -196,10 +196,6 @@
 
 <div class="earthquake-demo" bind:clientWidth={wrapperWidth}>
   <div class="controls-bar">
-    <div class="ctrl">
-      <label>Width <span>{containerWidth}px</span></label>
-      <input type="range" min="500" max="900" bind:value={containerWidth} />
-    </div>
     <div class="ctrl">
       <label>Fault angle <span>{faultAngle}&deg;</span></label>
       <input type="range" min="-45" max="45" bind:value={faultAngle} />

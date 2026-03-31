@@ -264,6 +264,32 @@
     untrack(() => render());
   }
 
+  function handleTouchMove(e: TouchEvent) {
+    if (!canvas || dataPoints.length === 0 || !e.touches[0]) return;
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.touches[0].clientX - rect.left;
+    mouseY = e.touches[0].clientY - rect.top;
+
+    const cw = (wrapperWidth > 0 ? wrapperWidth : 700);
+    const pad = { left: 60, right: 30 };
+    const plotW = cw - pad.left - pad.right;
+
+    const ratio = (mouseX - pad.left) / plotW;
+    if (ratio >= 0 && ratio <= 1) {
+      const idx = Math.round(ratio * (dataPoints.length - 1));
+      hoveredPoint = dataPoints[Math.max(0, Math.min(idx, dataPoints.length - 1))];
+    } else {
+      hoveredPoint = null;
+    }
+    untrack(() => render());
+  }
+
+  function handleTouchEnd() {
+    hoveredPoint = null;
+    mouseX = -1;
+    untrack(() => render());
+  }
+
   onMount(() => {
     computeTerrain();
     render();
@@ -318,6 +344,8 @@
       bind:this={canvas}
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
+      ontouchmove={handleTouchMove}
+      ontouchend={handleTouchEnd}
     ></canvas>
   </div>
 
@@ -392,5 +420,9 @@
     max-height: 200px;
     overflow-y: auto;
     box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+  }
+
+  @media (max-width: 600px) {
+    .ctrl { min-width: 60px; }
   }
 </style>

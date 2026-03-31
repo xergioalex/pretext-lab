@@ -5,10 +5,13 @@
 
   const longText = `${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.long}`;
 
+  let wrapperWidth = $state(0);
+
   let fontSize = $state(14);
   let shelfCount = $state(5);
   let startWidth = $state(700);
   let endWidth = $state(200);
+  let displayStartWidth = $derived(Math.min(startWidth, wrapperWidth > 0 ? wrapperWidth - 40 : startWidth));
   let lineHeight = $derived(Math.round(fontSize * 1.6));
   let shelfHeight = $state(150);
   let autoPlay = $state(false);
@@ -37,9 +40,9 @@
     for (let s = 0; s < shelfCount; s++) {
       if (done) break;
       const t = shelfCount > 1 ? s / (shelfCount - 1) : 0;
-      const shelfWidth = Math.round(startWidth + (endWidth - startWidth) * t);
+      const shelfWidth = Math.round(displayStartWidth + (endWidth - displayStartWidth) * t);
       // Center each shelf, offset slightly right for cascade
-      const shelfX = Math.round((startWidth - shelfWidth) / 2 + s * 8);
+      const shelfX = Math.round((displayStartWidth - shelfWidth) / 2 + s * 8);
       const shelfLines: ShelfData['lines'] = [];
       let y = 0;
       let safety = 0;
@@ -69,8 +72,8 @@
 
   function tick() {
     if (!autoPlay) return;
-    startWidth = Math.max(300, startWidth - 1);
-    if (startWidth <= 300) {
+    startWidth = Math.max(280, startWidth - 1);
+    if (startWidth <= 280) {
       startWidth = 700;
     }
     computeLayout();
@@ -85,12 +88,12 @@
   });
 
   $effect(() => {
-    fontSize; shelfCount; startWidth; endWidth; shelfHeight; lineHeight;
+    fontSize; shelfCount; startWidth; endWidth; shelfHeight; lineHeight; displayStartWidth;
     if (!autoPlay) computeLayout();
   });
 </script>
 
-<div class="wf-demo">
+<div class="wf-demo" bind:clientWidth={wrapperWidth}>
   <div class="controls-bar">
     <div class="ctrl">
       <label>Shelves <span>{shelfCount}</span></label>
@@ -98,7 +101,7 @@
     </div>
     <div class="ctrl">
       <label>Start width <span>{startWidth}px</span></label>
-      <input type="range" min="500" max="900" bind:value={startWidth} />
+      <input type="range" min="280" max="900" bind:value={startWidth} />
     </div>
     <div class="ctrl">
       <label>End width <span>{endWidth}px</span></label>
@@ -129,7 +132,7 @@
     {/each}
   </div>
 
-  <div class="wf-canvas" style="width: {startWidth + shelfCount * 8 + 24}px; height: {shelves.length > 0 ? shelves[shelves.length - 1].y + shelfHeight + 20 : 400}px;">
+  <div class="wf-canvas" style="width: {displayStartWidth + shelfCount * 8 + 24}px; height: {shelves.length > 0 ? shelves[shelves.length - 1].y + shelfHeight + 20 : 400}px;">
     {#each shelves as shelf, si}
       <!-- Shelf background -->
       <div

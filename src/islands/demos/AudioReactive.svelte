@@ -229,7 +229,7 @@
     </div>
     <div class="ctrl">
       <label>Base Width <span>{baseWidth}px</span></label>
-      <input type="range" min="200" max="700" bind:value={baseWidth} />
+      <input type="range" min="200" max="600" bind:value={baseWidth} />
     </div>
     <button
       class="play-btn"
@@ -345,5 +345,11 @@
     margin: 0;
     word-wrap: break-word;
     transition: line-height 0.08s ease-out;
+  }
+
+  @media (max-width: 600px) {
+    .toggle-group { flex-direction: column; }
+    .controls-bar { gap: var(--space-sm); }
+    .ctrl { min-width: 70px; }
   }
 </style>

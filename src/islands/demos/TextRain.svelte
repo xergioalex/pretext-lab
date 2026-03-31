@@ -14,7 +14,7 @@
   let mouseY = $state(canvasHeight * 0.6);
   let mouseX = $state(0);
   let mouseInCanvas = $state(false);
-  const cursorWidth = 600;
+  let cursorWidth = $derived(Math.min(600, canvasWidth * 0.85));
 
   interface Particle {
     char: string;
@@ -237,6 +237,27 @@
     mouseY = e.clientY - rect.top;
   }
 
+  function handleTouchStart(e: TouchEvent) {
+    e.preventDefault();
+    mouseInCanvas = true;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    mouseX = touch.clientX - rect.left;
+    mouseY = touch.clientY - rect.top;
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    mouseX = touch.clientX - rect.left;
+    mouseY = touch.clientY - rect.top;
+  }
+
+  function handleTouchEnd() {
+    mouseInCanvas = false;
+  }
+
   onMount(() => {
     initParticles();
     resizeCanvas();
@@ -272,6 +293,9 @@
       onmousemove={handleMouseMove}
       onmouseenter={() => mouseInCanvas = true}
       onmouseleave={() => mouseInCanvas = false}
+      ontouchstart={handleTouchStart}
+      ontouchmove={handleTouchMove}
+      ontouchend={handleTouchEnd}
     ></canvas>
   </div>
 </div>

@@ -10,6 +10,10 @@
   let shape = $state<'heart' | 'star' | 'circle' | 'diamond'>('heart');
   let lineHeight = $derived(Math.round(fontSize * 1.6));
 
+  let wrapperWidth = $state(0);
+  let displaySize = $derived(Math.min(shapeSize, wrapperWidth > 0 ? wrapperWidth - 32 : shapeSize));
+  let displayScale = $derived(displaySize / shapeSize);
+
   let lines: Array<{ text: string; x: number; y: number; color: string }> = $state([]);
   let lineCount = $state(0);
 
@@ -154,7 +158,7 @@
   });
 </script>
 
-<div class="silhouette-demo">
+<div class="silhouette-demo" bind:clientWidth={wrapperWidth}>
   <div class="controls-bar">
     <div class="shape-btns">
       <button class:active={shape === 'heart'} onclick={() => shape = 'heart'}>Heart</button>
@@ -178,9 +182,9 @@
     <span class="stat-pill">Using <code>layoutNextLine()</code></span>
   </div>
 
-  <div class="silhouette-canvas" style="width: {shapeSize}px; height: {shapeSize}px;">
+  <div class="silhouette-canvas" style="width: {displaySize}px; height: {displaySize}px;">
     <!-- SVG shape outline -->
-    <svg class="shape-outline" viewBox="0 0 {shapeSize} {shapeSize}" width={shapeSize} height={shapeSize}>
+    <svg class="shape-outline" viewBox="0 0 {shapeSize} {shapeSize}" width={displaySize} height={displaySize}>
       <path d={svgShapePath(shape)} fill="none" stroke="var(--accent)" stroke-width="1.5" opacity="0.25" />
     </svg>
 
@@ -189,10 +193,10 @@
       <div
         class="sil-line"
         style="
-          left: {line.x}px;
-          top: {line.y}px;
-          font-size: {fontSize}px;
-          line-height: {lineHeight}px;
+          left: {line.x * displayScale}px;
+          top: {line.y * displayScale}px;
+          font-size: {fontSize * displayScale}px;
+          line-height: {lineHeight * displayScale}px;
           color: {line.color};
         "
       >{line.text}</div>

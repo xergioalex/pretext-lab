@@ -26,8 +26,9 @@
   function computeLayout() {
     const font = buildFont(fontSize);
     const prepared = prepareWithSegments(longText, font);
-    const totalGaps = (columnCount - 1) * gap;
-    const colWidth = Math.floor((containerWidth - totalGaps) / columnCount);
+    const effectiveColumns = containerWidth < 500 ? Math.min(columnCount, 2) : columnCount;
+    const totalGaps = (effectiveColumns - 1) * gap;
+    const colWidth = Math.floor((containerWidth - totalGaps) / effectiveColumns);
     const pullQuoteHeight = 80;
     const pullQuoteY = Math.round(columnHeight * 0.3);
 
@@ -36,7 +37,7 @@
     let total = 0;
     let done = false;
 
-    for (let col = 0; col < columnCount; col++) {
+    for (let col = 0; col < effectiveColumns; col++) {
       if (done) break;
       const colX = col * (colWidth + gap);
       const colLines: ColumnLine[] = [];
@@ -264,5 +265,12 @@
 
   .mc-line.first-line {
     color: var(--text-primary);
+  }
+
+  @media (max-width: 600px) {
+    .mc-canvas { padding: 0 6px; }
+    .controls-bar { gap: var(--space-sm); }
+    .ctrl { min-width: 70px; }
+    .col-btns button { padding: 5px 10px; font-size: 0.72rem; }
   }
 </style>

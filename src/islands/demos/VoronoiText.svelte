@@ -322,6 +322,38 @@
     }
   }
 
+  function handleTouchStart(e: TouchEvent) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const mx = touch.clientX - rect.left;
+    const my = touch.clientY - rect.top;
+    for (let i = 0; i < seeds.length; i++) {
+      const dx = mx - seeds[i].x;
+      const dy = my - seeds[i].y;
+      if (dx * dx + dy * dy < 400) {
+        dragIndex = i;
+        seeds[i].dragging = true;
+        return;
+      }
+    }
+  }
+
+  function handleTouchMove(e: TouchEvent) {
+    e.preventDefault();
+    if (dragIndex < 0) return;
+    const touch = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    seeds[dragIndex].x = Math.max(20, Math.min(canvasWidth - 20, touch.clientX - rect.left));
+    seeds[dragIndex].y = Math.max(20, Math.min(canvasHeight - 20, touch.clientY - rect.top));
+    seeds[dragIndex].baseX = seeds[dragIndex].x;
+    seeds[dragIndex].baseY = seeds[dragIndex].y;
+  }
+
+  function handleTouchEnd() {
+    handleMouseUp();
+  }
+
   onMount(() => {
     initSeeds();
     resizeCanvas();
@@ -359,6 +391,9 @@
       onmousemove={handleMouseMove}
       onmouseup={handleMouseUp}
       onmouseleave={handleMouseUp}
+      ontouchstart={handleTouchStart}
+      ontouchmove={handleTouchMove}
+      ontouchend={handleTouchEnd}
     ></canvas>
   </div>
 </div>
