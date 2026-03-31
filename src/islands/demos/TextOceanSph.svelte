@@ -79,9 +79,10 @@
       const col = i % actualCols;
       const row = Math.floor(i / actualCols);
       const x = margin + col * spacing + spacing * 0.5 + (Math.random() - 0.5) * 3;
-      const y = row * spacing + (Math.random() - 0.5) * 3 - 20; // start above canvas
+      const y = row * spacing + (Math.random() - 0.5) * 3 - 40;
+      // Give initial downward velocity via verlet (py above y = falling)
       particles.push({
-        x, y, px: x, py: y,
+        x, y, px: x + (Math.random() - 0.5) * 2, py: y - 2 - Math.random() * 3,
         char: allChars[i % allChars.length],
         density: 0,
       });
@@ -126,14 +127,14 @@
       const pi = particles[i];
 
       // Gravity (applied as velocity via verlet)
-      pi.y += gravity * dt * dt;
+      pi.y += gravity * 0.0004; // strong gravity for visible falling
 
       // Wave forces at surface
       const surfaceThreshold = canvasHeight * 0.6;
       if (pi.y < surfaceThreshold) {
         const factor = 1 - (pi.y / surfaceThreshold);
-        pi.x += Math.sin(phase + pi.x * 0.01) * waveForce * factor * dt * dt;
-        pi.y += Math.cos(phase * 0.7 + pi.x * 0.015) * waveForce * 0.3 * factor * dt * dt;
+        pi.x += Math.sin(phase + pi.x * 0.01) * waveForce * factor * 0.0003;
+        pi.y += Math.cos(phase * 0.7 + pi.x * 0.015) * waveForce * 0.3 * factor * 0.0003;
       }
 
       // Mouse repulsion
