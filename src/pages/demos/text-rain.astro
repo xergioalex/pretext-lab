@@ -10,32 +10,70 @@ import TextRainIsland from '../../islands/demos/TextRain.svelte';
   context="Inspired by Camille Utterback's 'Text Rain' art installation, this demo turns each character into a falling particle. Letters rain down from the top of the canvas. Move your mouse to create a horizontal 'shelf' that catches them. When letters land, they snap to their home X positions, forming readable text. Move the cursor away and they resume falling. The effect creates a playful interaction between physics and typography."
   apis={['prepareWithSegments()', 'layoutWithLines()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '20px Inter');
+// Step 1: Use Pretext to compute "home" positions for every character
+const font = buildFont(20, 'Inter, sans-serif');
+const lineHeight = Math.round(20 * 1.6);
+const prepared = prepareWithSegments(text, font);
 const result = layoutWithLines(prepared, maxWidth, lineHeight);
 
-// Each character becomes a particle
-for (const line of result.lines) {
+// Step 2: Extract per-character positions using canvas measureText
+const tempCtx = document.createElement('canvas').getContext('2d');
+tempCtx.font = font;
+const particles = [];
+
+for (let li = 0; li < result.lines.length; li++) {
+  const line = result.lines[li];
+  const homeY = margin + li * lineHeight;
+  let homeX = margin;
+
   for (const char of line.text) {
+    const charW = tempCtx.measureText(char).width;
     particles.push({
       char, homeX, homeY,
-      x: homeX, y: -random() * 400,
-      vy: 0.5 + random() * 1.5,
+      x: homeX + (Math.random() - 0.5) * 40,  // slight horizontal scatter
+      y: -20 - Math.random() * canvasHeight * 0.8, // start above canvas
+      vy: 0.5 + Math.random() * 1.5,  // initial fall speed
       landed: false,
+      opacity: 0.4 + Math.random() * 0.3,
+      width: charW,
+      delay: Math.random() * 120, // staggered entry
     });
+    homeX += charW;
   }
 }
 
-// Each frame: apply gravity, check cursor collision
-function frame() {
+// Step 3: Physics loop — gravity + cursor collision + landing
+const cursorWidth = 600; // shelf width centered on mouse
+function tick() {
   for (const p of particles) {
-    if (!p.landed) {
-      p.vy += 0.15; // gravity
-      p.y += p.vy;
-      if (p.y >= mouseY && nearCursor(p)) {
-        p.landed = true;
+    if (p.delay > 0) { p.delay--; continue; }
+
+    if (p.landed) {
+      // Check if cursor moved away — release the particle to resume falling
+      const inRange = p.homeX >= mouseX - cursorWidth/2 && p.homeX <= mouseX + cursorWidth/2;
+      if (!mouseInCanvas || !inRange) {
+        p.landed = false; p.vy = 0.5; // release
+      } else {
+        // Snap to home X (readable text), stay at cursor Y
+        p.x += (p.homeX - p.x) * 0.15; // lerp toward home X
+        p.y += (mouseY - p.y) * 0.2;   // lerp toward cursor Y
+        p.opacity += (1 - p.opacity) * 0.1; // fade to full
       }
+    } else {
+      // Falling: apply gravity with terminal velocity
+      p.vy += 0.15;
+      p.vy = Math.min(p.vy, 4); // terminal velocity
+      p.y += p.vy;
+
+      // Land on cursor shelf if within range
+      if (mouseInCanvas && p.y >= mouseY - 20 && p.y <= mouseY + 10
+          && p.homeX >= mouseX - cursorWidth/2 && p.homeX <= mouseX + cursorWidth/2) {
+        p.landed = true; p.y = mouseY; p.vy = 0;
+      }
+      // Wrap: fell off bottom → reset to top
+      if (p.y > canvasHeight + 30) { p.y = -20; p.vy = 0.5 + Math.random() * 1.5; }
     }
   }
 }`}

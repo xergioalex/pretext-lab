@@ -10,19 +10,48 @@ import MeasureHeightIsland from '../../islands/demos/MeasureHeight.svelte';
   context="This demo shows the fundamental prepare/layout cycle. Type any text, adjust the width slider, and watch Pretext compute height and line count without touching the DOM. Notice how prepare() is called only when text or font changes, while layout() runs on every width adjustment."
   apis={['prepare()', 'layout()']}
   difficulty="Beginner"
-  snippet={`import { prepare, layout } from '@chenglou/pretext';
+  snippet={`import { prepare, layout, profilePrepare } from '@chenglou/pretext';
 
-// 1. Prepare text once (Unicode analysis, font metrics)
-const prepared = prepare('Your text here', '16px Inter, sans-serif');
+// Step 1: prepare() does the expensive work ONCE —
+// Unicode segmentation, word boundary detection, font measurement.
+// This typically takes ~0.5–2ms depending on text length.
+const font = '16px Inter, sans-serif';
+const text = 'Your paragraph text here...';
 
-// 2. Layout at any width — pure arithmetic, no DOM
+const t0 = performance.now();
+const prepared = prepare(text, font);
+const prepareMs = performance.now() - t0;
+console.log(\`prepare: \${prepareMs.toFixed(2)}ms\`); // ~1ms
+
+// Step 2: layout() is pure arithmetic — no DOM, no reflow.
+// Returns { height, lineCount }. Typically ~0.0002ms (sub-microsecond).
+const t1 = performance.now();
 const result = layout(prepared, 400, 24);
-console.log(result.height);    // e.g. 72
-console.log(result.lineCount); // e.g. 3
+const layoutMs = performance.now() - t1;
+console.log(result.height);    // e.g. 72px
+console.log(result.lineCount); // e.g. 3 lines
+console.log(\`layout: \${(layoutMs * 1000).toFixed(0)}μs\`); // ~1μs
 
-// 3. Relayout at a different width — instant
+// Step 3: Relayout at ANY width — reuses all the prepare work.
+// This is the key insight: resize is the hot path, and it's free.
 const narrow = layout(prepared, 200, 24);
-console.log(narrow.lineCount); // e.g. 6`}
+const wide = layout(prepared, 800, 24);
+console.log(narrow.lineCount); // e.g. 6 (more wrapping)
+console.log(wide.lineCount);   // e.g. 1 (no wrapping)
+
+// Step 4: profilePrepare() gives timing breakdown of the
+// expensive step — useful for understanding where time goes.
+const profile = profilePrepare(text, font);
+console.log(\`total: \${profile.totalMs.toFixed(2)}ms\`);
+
+// Resize handler pattern — prepare once, relayout on every frame
+let width = 400;
+const onResize = () => {
+  // This runs in <1μs — safe to call on every animation frame
+  const { height, lineCount } = layout(prepared, width, 24);
+  element.style.height = height + 'px';
+};
+window.addEventListener('resize', onResize);`}
 >
   <div class="demo-area" slot="demo">
     <MeasureHeightIsland client:only="svelte" />

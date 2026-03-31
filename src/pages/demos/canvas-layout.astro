@@ -12,15 +12,68 @@ import CanvasLayoutIsland from '../../islands/demos/CanvasLayout.svelte';
   difficulty="Intermediate"
   snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '18px Inter');
-const result = layoutWithLines(prepared, width, 28);
+// Canvas has NO built-in multiline text. Pretext provides
+// the line-breaking logic; canvas just draws each line.
+const fontSize = 18;
+const lineHeight = 30;
+const maxWidth = 520;
+const font = \`\${fontSize}px Inter, sans-serif\`;
 
-// Render each line to canvas
-const ctx = canvas.getContext('2d');
-result.lines.forEach((line, i) => {
-  ctx.fillText(line.text, x, y + i * lineHeight);
-  // line.width gives exact pixel width
-});`}
+// prepareWithSegments gives line-level data (text + width per line)
+const prepared = prepareWithSegments(text, font);
+const result = layoutWithLines(prepared, maxWidth, lineHeight);
+
+// DPR-aware canvas setup — critical for crisp text on Retina
+const canvas = document.querySelector('canvas')!;
+const ctx = canvas.getContext('2d')!;
+const dpr = window.devicePixelRatio || 1;
+const pad = 50;
+
+canvas.width = (maxWidth + pad + 20) * dpr;
+canvas.height = (result.height + 60) * dpr;
+canvas.style.width = (maxWidth + pad + 20) + 'px';
+canvas.style.height = (result.height + 60) + 'px';
+ctx.scale(dpr, dpr);
+
+// Color helpers for per-line visualization
+const rainbow = ['#7c6cf0', '#3ecf8e', '#f5a623', '#06b6d4', '#ec4899'];
+function heatColor(ratio: number): string {
+  const r = Math.round(255 * ratio);
+  const b = Math.round(255 * (1 - ratio));
+  return \`rgb(\${r}, 80, \${b})\`;
+}
+
+// Render each line — Pretext computed the breaks, we just draw
+const originX = pad;
+const originY = 30;
+
+for (let i = 0; i < result.lines.length; i++) {
+  const line = result.lines[i];
+  const y = originY + i * lineHeight;
+  const fillRatio = line.width / maxWidth;
+
+  // Line background box — opacity reflects how full the line is
+  ctx.fillStyle = rainbow[i % rainbow.length] + '18';
+  ctx.fillRect(originX, y, line.width, lineHeight - 1);
+
+  // Width fill bar — visual indicator of line utilization
+  ctx.fillStyle = heatColor(fillRatio) + '55';
+  ctx.fillRect(originX + maxWidth + 4, y + 4,
+    fillRatio * 30, lineHeight - 9);
+
+  // Draw the actual text
+  ctx.font = font;
+  ctx.fillStyle = rainbow[i % rainbow.length];
+  ctx.textBaseline = 'top';
+  ctx.fillText(line.text, originX, y + (lineHeight - fontSize) / 2);
+
+  // Line number gutter
+  ctx.font = '10px JetBrains Mono, monospace';
+  ctx.fillStyle = '#5c5c6e';
+  ctx.textAlign = 'right';
+  ctx.fillText(\`\${i + 1}\`, originX - 8, y + (lineHeight - 10) / 2);
+  ctx.textAlign = 'left';
+}`}
 >
   <div class="demo-area" slot="demo">
     <CanvasLayoutIsland client:only="svelte" />

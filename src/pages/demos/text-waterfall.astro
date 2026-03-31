@@ -10,22 +10,56 @@ import TextWaterfallIsland from '../../islands/demos/TextWaterfall.svelte';
   context="This demo arranges text across multiple shelves, each narrower than the last. The cursor carries forward between shelves, so text flows continuously from the widest shelf down to the narrowest — like a waterfall cascading over ledges. Each shelf is centered with a slight offset to create the cascade effect."
   apis={['prepareWithSegments()', 'layoutNextLine()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '14px Inter');
+// --- Waterfall geometry ---
+const fontSize = 14;
+const lineHeight = Math.round(fontSize * 1.6); // 22px
+const shelfCount = 5;
+const startWidth = 700;  // widest shelf (top)
+const endWidth = 200;    // narrowest shelf (bottom)
+const shelfHeight = 150; // max lines per shelf before overflow
+const shelfGap = 12;     // vertical gap between shelves
+
+// --- Prepare text once, flow through all shelves ---
+const font = buildFont(fontSize);
+const prepared = prepareWithSegments(text, font);
 let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+let globalY = 0;
+const shelves = [];
 
 for (let s = 0; s < shelfCount; s++) {
-  const t = s / (shelfCount - 1);
-  const width = startWidth + (endWidth - startWidth) * t;
+  // Interpolate width: shelf 0 = startWidth, last = endWidth
+  const t = shelfCount > 1 ? s / (shelfCount - 1) : 0;
+  const shelfWidth = Math.round(startWidth + (endWidth - startWidth) * t);
+
+  // Center each shelf, with slight rightward cascade offset
+  const shelfX = Math.round((startWidth - shelfWidth) / 2 + s * 8);
+  const shelfLines = [];
   let y = 0;
+
+  // Fill this shelf until height is exhausted
   while (y < shelfHeight) {
-    const line = layoutNextLine(prepared, cursor, width);
-    if (!line) break;
-    cursor = line.end;  // cursor carries to next shelf
+    const line = layoutNextLine(prepared, cursor, shelfWidth);
+    if (!line) break; // text exhausted
+
+    shelfLines.push({ text: line.text, x: 0, y });
+    cursor = line.end; // KEY: cursor carries to next shelf!
     y += lineHeight;
   }
-}`}
+
+  shelves.push({
+    width: shelfWidth,
+    x: shelfX,
+    y: globalY,
+    lines: shelfLines,
+  });
+  globalY += shelfHeight + shelfGap; // advance to next shelf
+}
+
+// Result: 5 shelves, each progressively narrower
+// Shelf 1: 700px wide, Shelf 2: 575px, ... Shelf 5: 200px
+// Text flows seamlessly across all shelves via cursor continuity`}
 >
   <div class="demo-area" slot="demo">
     <TextWaterfallIsland client:only="svelte" />

@@ -10,21 +10,72 @@ import TextHourglassIsland from '../../islands/demos/TextHourglass.svelte';
   context="This demo shapes text into an hourglass silhouette using per-line variable width layout. The top half is an inverted triangle (wide to narrow) and the bottom is a regular triangle (narrow to wide). A timer mode animates text fading from top to bottom, simulating sand falling through the neck."
   apis={['prepareWithSegments()', 'layoutNextLine()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '14px Inter');
-let cursor = { segmentIndex: 0, graphemeIndex: 0 };
-let y = 0;
+// --- Hourglass width function ---
+// Wide at top/bottom edges, pinched at the center "neck"
+function getWidthAtY(y, height, maxW, neckW) {
+  const midY = height / 2;
+  const dist = Math.abs(y - midY) / midY; // 0 at center, 1 at edges
+  return neckW + dist * (maxW - neckW);    // neckW..maxW
+}
 
-while (y < halfHeight) {
-  // Hourglass width: wide at edges, narrow at center
-  const dist = Math.abs(y - midY) / midY;
-  const width = neckWidth + dist * (maxWidth - neckWidth);
-  const line = layoutNextLine(prepared, cursor, width);
+// --- Layout parameters ---
+const fontSize = 14;
+const lineHeight = Math.round(fontSize * 1.6);
+const hourglassHeight = 550;
+const neckWidth = 100;  // narrowest point
+const maxWidth = 600;   // widest point (top & bottom edges)
+const halfHeight = hourglassHeight / 2;
+const font = buildFont(fontSize);
+
+// --- Top half: wide at top, narrow at middle ---
+const preparedTop = prepareWithSegments(topText, font);
+let cursorTop = { segmentIndex: 0, graphemeIndex: 0 };
+let topLines = [], y = 0;
+
+while (y + lineHeight <= halfHeight) {
+  const w = getWidthAtY(y, hourglassHeight, maxWidth, neckWidth);
+  const availW = Math.max(40, w - 16); // small margin
+  const line = layoutNextLine(preparedTop, cursorTop, availW);
   if (!line) break;
-  cursor = line.end;
+  const xOffset = (maxWidth - availW) / 2; // center within hourglass
+  topLines.push({ text: line.text, x: xOffset, y, width: availW });
+  cursorTop = line.end;
   y += lineHeight;
-}`}
+}
+
+// --- Bottom half: narrow at middle, wide at bottom ---
+const preparedBottom = prepareWithSegments(bottomText, font);
+let cursorBottom = { segmentIndex: 0, graphemeIndex: 0 };
+let bottomLines = [];
+y = halfHeight; // start at the neck
+
+while (y + lineHeight <= hourglassHeight) {
+  const w = getWidthAtY(y, hourglassHeight, maxWidth, neckWidth);
+  const availW = Math.max(40, w - 16);
+  const line = layoutNextLine(preparedBottom, cursorBottom, availW);
+  if (!line) break;
+  bottomLines.push({ text: line.text, x: (maxWidth - availW) / 2, y });
+  cursorBottom = line.end;
+  y += lineHeight;
+}
+
+// --- Timer mode: fade lines to simulate sand falling ---
+// Alpha per line based on elapsed progress (0..1)
+const fadedCount = Math.floor(progress * topLines.length * 2);
+topLines.forEach((line, i) => {
+  line.alpha = i < fadedCount ? Math.max(0.1, 1 - progress * 1.5) : 1;
+});
+
+// --- SVG outline path (smooth hourglass curve) ---
+const points = [];
+for (let i = 0; i <= 60; i++) {
+  const py = (i / 60) * hourglassHeight;
+  const w = getWidthAtY(py, hourglassHeight, maxWidth, neckWidth);
+  points.push(\`L \${(maxWidth - w) / 2} \${py}\`); // left edge
+}
+// Then trace right edge bottom-to-top to close the shape`}
 >
   <div class="demo-area" slot="demo">
     <TextHourglassIsland client:only="svelte" />

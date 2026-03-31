@@ -12,15 +12,49 @@ import ResizeRelayoutIsland from '../../islands/demos/ResizeRelayout.svelte';
   difficulty="Beginner"
   snippet={`import { prepare, layout } from '@chenglou/pretext';
 
-// Prepare all text blocks once
-const blocks = texts.map(text => prepare(text, '14px Inter'));
+// 16 text blocks, each with different content.
+// prepare() is called ONCE per block — the expensive step.
+const font = '14px Inter, sans-serif';
+const lineHeight = 21; // fontSize * 1.5
+const preparedBlocks = texts.map(text => ({
+  text,
+  prepared: prepare(text, font),  // ~0.5–1ms each
+  result: null as { height: number; lineCount: number } | null,
+}));
 
-// On every resize event — relayout is cheap
-function onResize(newWidth: number) {
-  const results = blocks.map(p => layout(p, newWidth, 21));
-  // Each result has .height and .lineCount
-  // No DOM reads needed — pure arithmetic
-}`}
+// Batch relayout: runs layout() on ALL 16 blocks at a new width.
+// This is the hot path that runs on every resize frame.
+function relayoutAll(newWidth: number) {
+  const t0 = performance.now();
+  for (const block of preparedBlocks) {
+    block.result = layout(block.prepared, newWidth, lineHeight);
+  }
+  const totalUs = Math.round((performance.now() - t0) * 1000);
+  const perBlockUs = Math.round(totalUs / preparedBlocks.length);
+
+  // Typical results: ~15μs total, ~1μs per block.
+  // That's 16 text measurements in less than 0.02ms.
+  console.log(\`\${preparedBlocks.length} blocks: \${totalUs}μs total, \${perBlockUs}μs each\`);
+  return preparedBlocks;
+}
+
+// Initial layout at 400px
+relayoutAll(400);
+
+// On resize — relayout is pure arithmetic, no DOM reads.
+// Compare: DOM approach would trigger 16 reflows per frame.
+let animFrame: number;
+function onResize() {
+  cancelAnimationFrame(animFrame);
+  animFrame = requestAnimationFrame(() => {
+    const blocks = relayoutAll(container.offsetWidth);
+    blocks.forEach((b, i) => {
+      // Use computed heights to position elements
+      elements[i].style.height = b.result!.height + 'px';
+    });
+  });
+}
+window.addEventListener('resize', onResize);`}
 >
   <div class="demo-area" slot="demo">
     <ResizeRelayoutIsland client:only="svelte" />

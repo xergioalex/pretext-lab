@@ -10,25 +10,63 @@ import WaveDistortionIsland from '../../islands/demos/WaveDistortion.svelte';
   context="This demo creates a mesmerizing flowing effect by applying a sine wave to the available width of each line. The wave animates continuously, and the text reflows smoothly to fill the undulating shape. Adjust amplitude, frequency, and speed to create different wave patterns."
   apis={['prepareWithSegments()', 'layoutNextLine()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '15px Inter');
+const font = buildFont(15);
+const prepared = prepareWithSegments(longText, font);
+const lineHeight = 24, margin = 16;
+const containerWidth = 750;
+let waveAmplitude = 120;  // how far the wave pushes (px)
+let waveFrequency = 3;    // oscillations across the height
+let waveSpeed = 1.5;      // phase advance per frame
+let wavePhase = 0;
 
-// Each frame: animate wave phase, reflow text
-function frame() {
-  wavePhase += 0.02;
+function tick() {
+  wavePhase += 0.02 * waveSpeed; // animate the wave continuously
   let cursor = { segmentIndex: 0, graphemeIndex: 0 };
   let y = 0;
+  const lines = [];
 
-  while (true) {
-    // Sine wave determines width per line
-    const wave = Math.sin((y / 100) * freq + wavePhase);
-    const width = baseWidth + wave * amplitude;
-    const line = layoutNextLine(prepared, cursor, width);
+  while (y < 3000) {
+    const lineMid = y + lineHeight / 2;
+
+    // Sine wave: positive offset → push from left, negative → push from right
+    const waveVal = Math.sin((lineMid / 100) * waveFrequency + wavePhase);
+    const offset = waveVal * waveAmplitude;
+
+    let xStart = margin;
+    let availWidth = containerWidth - margin * 2;
+
+    if (offset > 0) {
+      // Positive: indent from the left side
+      xStart = margin + offset;
+      availWidth = containerWidth - margin - xStart;
+    } else {
+      // Negative: shrink from the right side
+      availWidth = containerWidth - margin * 2 + offset;
+    }
+
+    // Clamp: never go below 40px — avoids degenerate 1-word lines
+    availWidth = Math.max(40, availWidth);
+
+    const line = layoutNextLine(prepared, cursor, availWidth);
     if (!line) break;
+    lines.push({ text: line.text, x: xStart, y, maxW: availWidth, offset });
     cursor = line.end;
     y += lineHeight;
   }
+
+  // --- SVG edge paths: trace the wave shape along both margins ---
+  const leftEdge = lines.map((l, i) =>
+    (i === 0 ? 'M' : 'L') + ' ' + l.x + ' ' + (l.y + lineHeight / 2)
+  ).join(' ');
+  const rightEdge = lines.map((l, i) =>
+    (i === 0 ? 'M' : 'L') + ' ' + (l.x + l.maxW) + ' ' + (l.y + lineHeight / 2)
+  ).join(' ');
+  // Render as <path d={leftEdge} /> and <path d={rightEdge} />
+
+  renderLines(lines);
+  requestAnimationFrame(tick); // every frame = full reflow
 }`}
 >
   <div class="demo-area" slot="demo">

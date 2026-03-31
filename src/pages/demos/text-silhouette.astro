@@ -10,21 +10,66 @@ import TextSilhouetteIsland from '../../islands/demos/TextSilhouette.svelte';
   context="This demo computes the horizontal extent of a chosen shape at each y-position, then uses layoutNextLine() with that width to fill the shape with text. Each line is centered within the shape boundary, creating a striking silhouette effect."
   apis={['prepareWithSegments()', 'layoutNextLine()']}
   difficulty="Advanced"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '14px Inter');
+// --- Shape boundary functions ---
+// Each returns [left, right] at a given normalized y (0..1), or null if outside shape
+function heartExtent(ny, shapeSize) {
+  const cx = shapeSize / 2;
+  if (ny < 0.05) return null;  // skip very top
+  if (ny < 0.4) {
+    // Top lobes: width swells with sin curve
+    const t = ny / 0.4;
+    const w = (0.35 + 0.15 * Math.sin(t * Math.PI)) * shapeSize;
+    return [cx - w, cx + w];
+  } else {
+    // Bottom taper: quadratic narrowing to a point
+    const t = (ny - 0.4) / 0.6;
+    const w = 0.5 * (1 - t * t) * shapeSize;
+    return w < 10 ? null : [cx - w, cx + w];
+  }
+}
+
+function starExtent(ny, shapeSize) {
+  const cx = shapeSize / 2;
+  const wave = Math.cos(5 * ny * Math.PI * 2); // 5 spikes
+  const r = 0.2 + 0.26 * (0.5 + 0.5 * wave);  // inner=0.2, outer=0.46
+  const w = r * shapeSize * (1 - Math.abs(ny - 0.5) * 0.4);
+  return w < 8 ? null : [cx - w, cx + w];
+}
+
+// --- Layout: fill shape line by line ---
+const font = buildFont(14);
+const lineHeight = Math.round(14 * 1.6);
+const prepared = prepareWithSegments(text, font);
 let cursor = { segmentIndex: 0, graphemeIndex: 0 };
 let y = 0;
+const lines = [];
 
 while (y < shapeSize) {
-  const [left, right] = getShapeExtent(y);
-  const line = layoutNextLine(prepared, cursor, right - left);
+  const ny = y / shapeSize; // normalize y to 0..1
+  const extent = heartExtent(ny + (lineHeight / shapeSize) * 0.5, shapeSize);
+  if (!extent) { y += lineHeight; continue; } // outside shape, skip
+
+  const [left, right] = extent;
+  const availWidth = right - left;
+  if (availWidth < 20) { y += lineHeight; continue; }
+
+  // layoutNextLine: fill exactly this width with text
+  const line = layoutNextLine(prepared, cursor, availWidth);
   if (!line) break;
-  // Center line within shape boundary
-  drawLine(line.text, left + (right - left - line.width) / 2, y);
-  cursor = line.end;
+
+  // Center the line within the shape boundary
+  const lineX = left + (availWidth - line.width) / 2;
+  lines.push({ text: line.text, x: lineX, y });
+  cursor = line.end; // cursor carries forward through the text
   y += lineHeight;
-}`}
+}
+
+// --- SVG outline (optional: draw shape border) ---
+// Heart path using cubic bezier for smooth curves
+const svgPath = \`M \${cx},\${sz*0.2} C \${cx+w},\${sz*-0.05}
+  \${cx+w*1.1},\${sz*0.4} \${cx},\${sz*0.92} ...\`;`}
 >
   <div class="demo-area" slot="demo">
     <TextSilhouetteIsland client:only="svelte" />

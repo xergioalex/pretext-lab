@@ -12,19 +12,60 @@ import MasonryCardsIsland from '../../islands/demos/MasonryCards.svelte';
   difficulty="Intermediate"
   snippet={`import { prepare, layout } from '@chenglou/pretext';
 
-// Predict card heights before rendering
-const cards = texts.map(text => {
-  const prepared = prepare(text, '14px Inter');
-  const { height } = layout(prepared, cardWidth, 22);
-  return { text, height: height + padding };
+// Card data — each has variable-length text content
+const cardTexts = [
+  'Short card.',
+  'A medium card with more text to show height variation.',
+  'This card has significantly more content to demonstrate ' +
+    'how Pretext predicts exact height for masonry packing.',
+  // ... more cards
+];
+
+const font = '13px Inter, sans-serif';
+const lineHeight = 13 * 1.55;   // ~20px
+const cardWidth = 240;
+const innerPadding = 20;        // padding inside each card
+const gap = 12;
+const numColumns = 4;
+
+// Step 1: Predict every card's height BEFORE rendering.
+// No hidden elements, no trial-and-error, no layout shift.
+const cards = cardTexts.map(text => {
+  const prepared = prepare(text, font);
+  const textArea = cardWidth - innerPadding * 2; // subtract padding
+  const result = layout(prepared, textArea, lineHeight);
+  return {
+    text,
+    // Total card height = text height + padding + accent bar + footer
+    height: result.height + innerPadding * 2 + 8,
+    lineCount: result.lineCount,
+  };
 });
 
-// Pack into columns (shortest column first)
-const columns = Array.from({ length: 3 }, () => []);
-cards.forEach(card => {
-  const shortest = columns.reduce((a, b) =>
-    a.totalH < b.totalH ? a : b);
-  shortest.push(card);
+// Step 2: Shortest-column-first packing algorithm.
+// All positions are computed with pure arithmetic.
+const colHeights = new Array(numColumns).fill(0);
+const positioned = cards.map(card => {
+  // Find the shortest column
+  let minCol = 0;
+  for (let c = 1; c < numColumns; c++) {
+    if (colHeights[c] < colHeights[minCol]) minCol = c;
+  }
+  const top = colHeights[minCol];
+  const left = minCol * (cardWidth + gap);
+  colHeights[minCol] += card.height + gap;
+  return { ...card, top, left, col: minCol };
+});
+
+// Step 3: Render with absolute positioning — zero layout shift.
+// Container height is known before any DOM element is created.
+const containerHeight = Math.max(...colHeights);
+positioned.forEach(card => {
+  const el = document.createElement('div');
+  el.style.cssText = \`position:absolute;top:\${card.top}px;\` +
+    \`left:\${card.left}px;width:\${card.cardWidth}px;height:\${card.height}px\`;
+  el.textContent = card.text;
+  container.appendChild(el);
 });`}
 >
   <div class="demo-area" slot="demo">

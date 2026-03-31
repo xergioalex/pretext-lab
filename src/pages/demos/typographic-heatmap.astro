@@ -10,15 +10,61 @@ import TypographicHeatmapIsland from '../../islands/demos/TypographicHeatmap.sve
   context="This demo visualizes text layout quality by color-coding each line based on character density (characters per pixel) or fill ratio (how much of the available width each line uses). Low-density lines appear warm/red, indicating loose spacing or rivers of whitespace. High-density lines appear cool/blue, showing tightly packed text. A sidebar bar chart provides a per-line comparison, and river detection highlights vertically aligned spaces across consecutive lines."
   apis={['prepareWithSegments()', 'layoutWithLines()']}
   difficulty="Advanced"
-  snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '16px Inter');
+// Setup: prepare text with segment data for per-line analysis
+const font = buildFont(16);
+const prepared = prepareWithSegments(text, font);
+const lineHeight = Math.round(16 * 1.6);
 const result = layoutWithLines(prepared, maxWidth, lineHeight);
 
-for (const line of result.lines) {
-  const density = line.text.length / measureWidth(line.text);
-  const color = densityToColor(density);
-  // Render line with heatmap background
+// Measure each line's typographic quality using an offscreen canvas
+const tempCtx = document.createElement('canvas').getContext('2d');
+tempCtx.font = font;
+
+const heatLines = result.lines.map((line, i) => {
+  const measured = tempCtx.measureText(line.text);
+  const lineW = measured.width;
+  const charCount = line.text.length;
+
+  // Density: characters per pixel of width (higher = tighter text)
+  const density = lineW > 0 ? charCount / lineW : 0;
+  // Fill ratio: how much of maxWidth does this line actually use
+  const fillRatio = maxWidth > 0 ? lineW / maxWidth : 0;
+
+  // Find space positions (pixel offsets) for river detection
+  const spacePositions = [];
+  for (let ci = 0; ci < line.text.length; ci++) {
+    if (line.text[ci] === ' ') {
+      const sub = line.text.substring(0, ci);
+      spacePositions.push(tempCtx.measureText(sub).width);
+    }
+  }
+  return { text: line.text, width: lineW, density, fillRatio, spacePositions };
+});
+
+// River detection: spaces aligned vertically between consecutive lines
+// A "river" is a visual channel of whitespace running down the paragraph
+let riverCount = 0;
+for (let i = 0; i < heatLines.length - 1; i++) {
+  for (const posA of heatLines[i].spacePositions) {
+    for (const posB of heatLines[i + 1].spacePositions) {
+      if (Math.abs(posA - posB) < fontSize * 0.5) { riverCount++; break; }
+    }
+  }
+}
+
+// Color mapping: low density (red/warm) → high density (blue/cool)
+function getHeatColor(density, min, max) {
+  const t = (density - min) / (max - min || 1);
+  return \`hsl(\${t * 240}, 70%, 45%)\`; // 0=red, 120=green, 240=blue
+}
+
+// Render each line with a colored background + left border
+for (const line of heatLines) {
+  const color = getHeatColor(line.density, minDensity, maxDensity);
+  div.style.background = color + '22';     // subtle fill
+  div.style.borderLeft = '3px solid ' + color; // density indicator
 }`}
 >
   <div class="demo-area" slot="demo">

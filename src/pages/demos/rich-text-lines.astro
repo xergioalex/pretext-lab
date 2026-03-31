@@ -10,17 +10,68 @@ import RichTextLinesIsland from '../../islands/demos/RichTextLines.svelte';
   context="Real content is rarely plain text. This demo shows how Pretext handles text that will be rendered with mixed inline styles — bold, code, accent colors, and badges — by computing line breaks on the full text and mapping styled segments back to each line."
   apis={['prepareWithSegments()', 'layoutWithLines()']}
   difficulty="Advanced"
-  snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-// Concatenate all segments into plain text
-const plainText = segments.map(s => s.text).join('');
-const prepared = prepareWithSegments(plainText, '16px Inter');
-const result = layoutWithLines(prepared, width, 27);
+// Define styled segments — each has text + a style tag
+const segments = [
+  { text: 'Pretext ', style: 'bold' },
+  { text: 'turns text layout into a ', style: 'normal' },
+  { text: 'programmable primitive', style: 'accent' },
+  { text: '. Use ', style: 'normal' },
+  { text: 'prepare()', style: 'code' },
+  { text: ' for analysis and ', style: 'normal' },
+  { text: 'layout()', style: 'code' },
+  { text: ' for measurement. It handles ', style: 'normal' },
+  { text: 'Unicode', style: 'badge' },
+  { text: ' and ', style: 'normal' },
+  { text: 'bidirectional text', style: 'accent' },
+  { text: '.', style: 'normal' },
+];
 
-// Map character positions back to styled segments
-result.lines.forEach(line => {
-  const styledSpans = mapToSegments(line, segments);
-  renderStyledLine(styledSpans);
+// Step 1: Concatenate to flat text — Pretext needs one string
+const flatText = segments.map(s => s.text).join('');
+
+// Step 2: Layout the flat text — Pretext computes line breaks
+const font = buildFont(16);
+const prepared = prepareWithSegments(flatText, font);
+const result = layoutWithLines(prepared, 500, 16 * 1.7);
+
+// Step 3: Build segment offset map for character-to-style lookup
+const segOffsets = [];
+let offset = 0;
+for (const seg of segments) {
+  segOffsets.push({ start: offset, end: offset + seg.text.length, style: seg.style });
+  offset += seg.text.length;
+}
+
+// Step 4: Map each line's characters back to styled segments
+let charPos = 0;
+const styledLines = result.lines.map(line => {
+  const lineStart = charPos;
+  const lineEnd = charPos + line.text.length;
+  charPos = lineEnd;
+
+  // Find overlapping segments for this line's character range
+  const spans = segOffsets
+    .filter(s => s.end > lineStart && s.start < lineEnd)
+    .map(s => ({
+      text: flatText.slice(Math.max(s.start, lineStart), Math.min(s.end, lineEnd)),
+      style: s.style,
+    }));
+  return spans;
+});
+
+// Step 5: Render — each line is an array of styled spans
+// 'bold' → <strong>, 'code' → <code>, 'badge' → pill, etc.
+styledLines.forEach(spans => {
+  const lineEl = document.createElement('div');
+  spans.forEach(({ text, style }) => {
+    const span = document.createElement('span');
+    span.textContent = text;
+    span.className = style; // CSS handles visual styling
+    lineEl.appendChild(span);
+  });
+  container.appendChild(lineEl);
 });`}
 >
   <div class="demo-area" slot="demo">

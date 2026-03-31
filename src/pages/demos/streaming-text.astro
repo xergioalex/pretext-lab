@@ -12,16 +12,54 @@ import StreamingTextIsland from '../../islands/demos/StreamingText.svelte';
   difficulty="Intermediate"
   snippet={`import { prepare, layout, buildFont } from '@chenglou/pretext';
 
-// On each new token:
-const currentPrepared = prepare(currentText, font);
-const currentHeight = layout(currentPrepared, width, lh).height;
+// Setup: split the full LLM response into tokens (words)
+const fullText = "The complete response that will stream in...";
+const words = fullText.split(/\\s+/);
+const font = buildFont(15);
+const lineHeight = 15 * 1.6;
+const containerWidth = 500;
 
-// Predict final height (instant, even for full text):
-const finalPrepared = prepare(fullText, font);
-const predictedHeight = layout(finalPrepared, width, lh).height;
+// KEY INSIGHT: prepare the full text once BEFORE streaming starts.
+// prepare() is the expensive step, but layout() is pure arithmetic.
+// So we can predict the final height before a single token arrives.
+let preparedFull = prepare(fullText, font);
+let predictedHeight = layout(preparedFull, containerWidth, lineHeight).height;
 
-// Ghost container shows predicted height
-// Actual container grows smoothly toward it`}
+// Streaming loop: add tokens one by one
+let currentWordIndex = 0;
+const speed = 15; // tokens per second
+
+function onNewToken() {
+  currentWordIndex++;
+  const currentText = words.slice(0, currentWordIndex).join(' ');
+
+  // Actual height of text so far (cheap — just prepare + layout)
+  const currentPrepared = prepare(currentText, font);
+  const currentHeight = layout(currentPrepared, containerWidth, lineHeight).height;
+
+  // Accuracy: how close is predicted to actual at this moment
+  const accuracy = Math.round(
+    (1 - Math.abs(predictedHeight - currentHeight) / predictedHeight) * 100
+  );
+
+  // WITHOUT PREDICTION: container height = currentHeight (jumps on each new line)
+  jumpyContainer.style.height = currentHeight + 'px';
+
+  // WITH PREDICTION: container pre-allocated to predictedHeight (no jumps)
+  smoothContainer.style.minHeight = predictedHeight + 'px';
+
+  // Ghost container: dashed border showing where the text will end up
+  ghostContainer.style.height = predictedHeight + 'px';
+  // opacity: 0.3, border: 2px dashed accent color
+
+  // The predicted height is 100% accurate once all tokens arrive,
+  // and starts at 100% before any text (empty = 0, predicted = final).
+  // In between, accuracy tracks how close the partial layout is to final.
+}
+
+// If containerWidth changes mid-stream, just re-call layout() on both:
+// layout(preparedFull, newWidth, lineHeight) — still instant
+// No need to re-prepare, which is what makes this approach practical`}
 >
   <div class="demo-area" slot="demo">
     <StreamingTextIsland client:only="svelte" />

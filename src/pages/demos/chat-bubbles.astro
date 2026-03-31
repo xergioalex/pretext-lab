@@ -12,17 +12,63 @@ import ChatBubblesIsland from '../../islands/demos/ChatBubbles.svelte';
   difficulty="Intermediate"
   snippet={`import { prepare, layout } from '@chenglou/pretext';
 
-// Size each bubble without DOM measurement
-function sizeBubble(text: string, maxWidth: number) {
-  const prepared = prepare(text, '14px Inter');
-  const { height, lineCount } = layout(prepared, maxWidth, 21);
-  return { height: height + padding, lineCount };
+const fontSize = 14;
+const lineHeight = fontSize * 1.5;       // 21px
+const bubblePadding = 24;                // vertical padding inside bubble
+const maxBubbleRatio = 0.75;             // bubbles use 75% of container
+
+// Size a single message bubble — returns height and line count
+// without any DOM measurement.
+function sizeBubble(text: string, containerWidth: number) {
+  const font = \`\${fontSize}px Inter, sans-serif\`;
+  const maxBubbleWidth = containerWidth * maxBubbleRatio - 28;
+  const prepared = prepare(text, font);
+  const result = layout(prepared, maxBubbleWidth, lineHeight);
+  return {
+    height: result.height + bubblePadding,
+    lineCount: result.lineCount,
+    prepared,  // cache for cheap relayout on resize
+  };
 }
 
-// On container resize — relayout all bubbles instantly
-messages.forEach(msg => {
-  msg.size = sizeBubble(msg.text, containerWidth * 0.75);
-});`}
+// Initialize all messages with instant sizing
+interface Message {
+  text: string;
+  sender: 'user' | 'other';
+  height: number;
+  lineCount: number;
+  prepared: any;
+}
+
+let containerWidth = 480;
+const messages: Message[] = conversationTexts.map(m => ({
+  ...m,
+  ...sizeBubble(m.text, containerWidth),
+}));
+
+// Batch resize handler — relayouts ALL bubbles when container changes.
+// Each layout() call is ~1μs, so 100 messages = ~0.1ms.
+function onContainerResize(newWidth: number) {
+  containerWidth = newWidth;
+  const maxW = newWidth * maxBubbleRatio - 28;
+  for (const msg of messages) {
+    // Reuse the prepared text — only the width changed
+    const result = layout(msg.prepared, maxW, lineHeight);
+    msg.height = result.height + bubblePadding;
+    msg.lineCount = result.lineCount;
+  }
+}
+
+// Virtual scrolling: use predicted heights to compute total scroll height
+// and determine which messages are visible — all without rendering.
+const totalScrollHeight = messages.reduce((sum, m) => sum + m.height + 6, 0);
+
+// Add a new message — sized instantly before it enters the DOM
+function addMessage(text: string, sender: 'user' | 'other') {
+  const sized = sizeBubble(text, containerWidth);
+  messages.push({ text, sender, ...sized });
+  // Scroll position is already known — no layout shift
+}`}
 >
   <div class="demo-area" slot="demo">
     <ChatBubblesIsland client:only="svelte" />

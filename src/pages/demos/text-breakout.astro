@@ -10,23 +10,66 @@ import TextBreakoutIsland from '../../islands/demos/TextBreakout.svelte';
   context="Every brick is a word from a paragraph, positioned using Pretext. When you destroy a word, the remaining text is re-layouted with layoutWithLines() and the bricks repack — a live demonstration of instant text relayout as a game mechanic."
   apis={['prepareWithSegments()', 'layoutWithLines()']}
   difficulty="Game"
-  snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-// Layout paragraph to get word positions (bricks)
-const prepared = prepareWithSegments(paragraph, '14px Inter');
-const result = layoutWithLines(prepared, gameWidth, 22);
+const font = buildFont(14, 'Inter, sans-serif');
+const lineH = 22, brickMargin = 20;
+const gameWidth = 800;
+const maxW = gameWidth - brickMargin * 2;
 
-// Each word becomes a breakable brick
-const bricks = extractWords(result.lines);
+// --- Step 1: Layout paragraph into lines, extract words as bricks ---
+function initBricks(text) {
+  const prepared = prepareWithSegments(text, font);
+  const result = layoutWithLines(prepared, maxW, lineH);
+  const bricks = [];
 
-// When a brick is destroyed, relayout surviving text
-function onBrickDestroyed(word: string) {
-  const remaining = survivingWords.join(' ');
-  const newLayout = layoutWithLines(
-    prepareWithSegments(remaining, font), gameWidth, 22
-  );
-  // Bricks repack instantly — no layout shift
-}`}
+  for (let li = 0; li < result.lines.length; li++) {
+    const words = result.lines[li].text.trim().split(/\\s+/);
+    let xOffset = brickMargin;
+    const y = brickMargin + li * (lineH + 4);
+
+    for (const word of words) {
+      if (!word) continue;
+      // Measure each word individually for precise brick width
+      const wp = prepareWithSegments(word, font);
+      const wl = layoutWithLines(wp, 9999, lineH);
+      const w = (wl.lines[0]?.width ?? 40) + 8;
+
+      bricks.push({ word, x: xOffset, y, w, h: lineH, alive: true });
+      xOffset += w + 4; // brick width + gap
+    }
+  }
+  return bricks;
+}
+
+let bricks = initBricks(paragraph);
+
+// --- Step 2: Ball-brick collision detection ---
+function checkCollisions(ballX, ballY, ballR) {
+  for (const brick of bricks) {
+    if (!brick.alive) continue;
+    if (ballX + ballR >= brick.x && ballX - ballR <= brick.x + brick.w &&
+        ballY + ballR >= brick.y && ballY - ballR <= brick.y + brick.h) {
+      brick.alive = false;
+      ballVY *= -1;
+
+      // --- Step 3: THE KEY INSIGHT — relayout as game mechanic ---
+      // Gather surviving words, rejoin, and re-layout from scratch
+      const survivingText = bricks
+        .filter(b => b.alive)
+        .map(b => b.word)
+        .join(' ');
+
+      // Pretext re-layouts the entire paragraph instantly
+      // Bricks repack into fewer lines as words are destroyed
+      bricks = initBricks(survivingText);
+      return; // one collision per frame
+    }
+  }
+}
+
+// Each animation frame: move ball, check collisions, re-render
+// The paragraph visibly condenses as you destroy words — live relayout`}
 >
   <div class="demo-area" slot="demo">
     <TextBreakoutIsland client:only="svelte" />

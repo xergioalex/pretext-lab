@@ -12,14 +12,71 @@ import TextCollisionIsland from '../../islands/demos/TextCollision.svelte';
   difficulty="Spectacular"
   snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-// Each block: measure text height for its width
-const font = buildFont(13);
-const prepared = prepareWithSegments(blockText, font);
-const result = layoutWithLines(prepared, blockWidth, lineHeight);
-// result.height -> physics bounding box height
+// Step 1: Create a text block — Pretext computes its bounding box height
+function createBlock(text, color, x, y) {
+  const width = 100 + Math.random() * 150;
+  const font = buildFont(13);
+  const prepared = prepareWithSegments(text, font);
+  const lineHeight = 13 * 1.4;
+  const result = layoutWithLines(prepared, width, lineHeight);
 
-// On collision: blocks exchange momentum,
-// text stays perfectly laid out inside each block`}
+  return {
+    text, x, y, width,
+    height: Math.max(result.height, lineHeight), // physics bounding box
+    lines: result.lines,   // pre-computed for canvas rendering
+    vx: (Math.random() - 0.5) * 2, vy: 0,      // velocity
+    angle: 0, va: 0,       // rotation
+    color,
+  };
+}
+
+// Step 2: Physics loop — gravity, damping, wall bounce
+const gravity = 0.3, damping = 0.98, groundY = canvasHeight - 10;
+
+for (const b of blocks) {
+  b.vy += gravity;
+  b.vx *= damping; b.vy *= damping; b.va *= 0.95;
+  b.x += b.vx; b.y += b.vy; b.angle += b.va;
+
+  // Ground bounce with restitution
+  if (b.y + b.height > groundY) {
+    b.y = groundY - b.height;
+    b.vy *= -0.4; // restitution: lose 60% energy on bounce
+    if (Math.abs(b.vy) < 0.5) b.vy = 0;
+  }
+  // Wall bounce
+  if (b.x < 0) { b.x = 0; b.vx *= -0.5; }
+  if (b.x + b.width > canvasWidth) { b.x = canvasWidth - b.width; b.vx *= -0.5; }
+}
+
+// Step 3: AABB collision detection + momentum exchange
+for (let i = 0; i < blocks.length; i++) {
+  for (let j = i + 1; j < blocks.length; j++) {
+    const a = blocks[i], b = blocks[j];
+    const overlapX = Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x);
+    const overlapY = Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y);
+
+    if (overlapX > 0 && overlapY > 0) {
+      // Separate along axis of least penetration
+      if (overlapX < overlapY) {
+        const push = overlapX / 2;
+        if (a.x < b.x) { a.x -= push; b.x += push; } else { a.x += push; b.x -= push; }
+        const tmp = a.vx; a.vx = b.vx * 0.7; b.vx = tmp * 0.7; // swap + dampen
+      } else {
+        const push = overlapY / 2;
+        if (a.y < b.y) { a.y -= push; b.y += push; } else { a.y += push; b.y -= push; }
+        const tmp = a.vy; a.vy = b.vy * 0.7; b.vy = tmp * 0.7;
+      }
+    }
+  }
+}
+
+// Step 4: Drag-to-throw — track velocity from mouse delta
+function onMouseMove(e) {
+  dragging.block.vx = (mouseX - dragging.lastX) * 0.5;
+  dragging.block.vy = (mouseY - dragging.lastY) * 0.5;
+  // Release to throw with accumulated velocity
+}`}
 >
   <div class="demo-area" slot="demo">
     <TextCollisionIsland client:only="svelte" />

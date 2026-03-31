@@ -10,25 +10,74 @@ import EditorialEngineIsland from '../../islands/demos/EditorialEngine.svelte';
   context="This is the most ambitious demo in the lab. It combines layoutNextLine() with obstacle avoidance to create an editorial layout where text flows around a pull quote block. The result looks like a print magazine layout, computed entirely in JavaScript."
   apis={['prepareWithSegments()', 'layoutNextLine()', 'layoutWithLines()']}
   difficulty="Flagship"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(article, '17px Georgia');
+// Two floating orbs that bounce around the column
+let orbs = [
+  { x: 500, y: 120, radius: 60, vx: 0.8, vy: 0.5, color: '#7c6cf0' },
+  { x: 200, y: 280, radius: 45, vx: -0.6, vy: 0.7, color: '#3ecf8e' },
+];
+
+const margin = 24, contentTop = 70, lineHeight = 30;
+const containerWidth = 720;
+const textWidth = containerWidth - margin * 2;
+const font = buildFont(17, 'Georgia, Times New Roman, serif');
+const prepared = prepareWithSegments(articleText, font);
+
+// --- Per-line obstacle avoidance ---
 let cursor = { segmentIndex: 0, graphemeIndex: 0 };
-let y = 0;
+let y = contentTop;
+const lines = [];
 
-while (true) {
-  // Check if line overlaps with floating orbs
-  let width = columnWidth;
+while (y < 2000) {
+  let availWidth = textWidth;
+  let xOffset = margin;
+  const pad = 16;
+
+  // Check each orb: circle collision using sqrt(r² - dy²)
   for (const orb of orbs) {
-    if (overlaps(y, lineHeight, orb)) {
-      width = Math.min(width, orb.x - margin);
+    const lineMid = y + lineHeight / 2 - contentTop;
+    const dy = lineMid - orb.y;
+    const r = orb.radius + pad;
+    if (Math.abs(dy) >= r) continue; // no overlap
+
+    const dx = Math.sqrt(r * r - dy * dy);
+    const orbLeft = orb.x - dx, orbRight = orb.x + dx;
+
+    // Push text to whichever side has more room
+    if (orbLeft > textWidth / 2) {
+      availWidth = Math.max(60, orbLeft - margin);
+    } else if (orbRight < textWidth / 2) {
+      xOffset = Math.max(margin, orbRight + margin);
+      availWidth = textWidth - (xOffset - margin);
+    } else {
+      availWidth = Math.max(60, orbLeft - margin);
     }
   }
 
-  const line = layoutNextLine(prepared, cursor, width);
+  if (availWidth < 30) { y += lineHeight; continue; }
+  const line = layoutNextLine(prepared, cursor, availWidth);
   if (!line) break;
+  lines.push({ text: line.text, x: xOffset, y });
   cursor = line.end;
   y += lineHeight;
+}
+
+// --- Drop cap: render first character 4x larger ---
+const firstLine = lines[0];
+const dropCapChar = firstLine.text[0]; // e.g. 'I'
+// CSS: float:left, fontSize * 4, spans 3 lines
+
+// --- Orb bounce physics (each animation frame) ---
+function animateOrbs() {
+  for (const orb of orbs) {
+    orb.x += orb.vx; orb.y += orb.vy;
+    if (orb.x - orb.radius < 0 || orb.x + orb.radius > textWidth) orb.vx *= -1;
+    if (orb.y - orb.radius < 0 || orb.y + orb.radius > 400) orb.vy *= -1;
+  }
+  // Recompute entire layout — Pretext is fast enough for 60fps
+  recomputeLayout();
+  requestAnimationFrame(animateOrbs);
 }`}
 >
   <div class="demo-area" slot="demo">

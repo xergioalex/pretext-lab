@@ -10,21 +10,60 @@ import TextTerrainIsland from '../../islands/demos/TextTerrain.svelte';
   context="This demo sweeps across a range of container widths and plots the resulting text height at each width, creating a topographic chart. The 'cliffs' in the terrain correspond to line-count changes — points where the text wraps to one fewer line. Hover to see exact values and a live text preview at that width."
   apis={['prepare()', 'layout()']}
   difficulty="Advanced"
-  snippet={`import { prepare, layout } from '@chenglou/pretext';
+  snippet={`import { prepare, layout, buildFont } from '@chenglou/pretext';
 
-const prepared = prepare(text, '16px Inter');
+// Setup: prepare the text ONCE — this is the expensive step
+const font = buildFont(16);
+const prepared = prepare(text, font);
+const lineHeight = 24;
+
+// Sweep: call layout() at every width from 100 to 600px
+// layout() is pure arithmetic — no DOM, no reflows — so 150+ calls is fine
+const minWidth = 100, maxWidth = 600, sampleCount = 150;
 const points = [];
 
-// Sweep width from 100px to 600px
-for (let w = 100; w <= 600; w += 3) &#123;
+for (let i = 0; i < sampleCount; i++) {
+  const w = minWidth + (i / (sampleCount - 1)) * (maxWidth - minWidth);
   const result = layout(prepared, w, lineHeight);
-  points.push(&#123;
-    width: w,
-    height: result.height,
-    lineCount: result.lineCount,
-  &#125;);
-&#125;
-// Plot points as elevation on a canvas chart`}
+  points.push({ width: Math.round(w), height: result.height, lineCount: result.lineCount });
+}
+
+// Detect "cliffs" — widths where lineCount changes (a line break disappears)
+// These are the critical widths for tightest layout
+const cliffs = [];
+for (let i = 1; i < points.length; i++) {
+  if (points[i].lineCount !== points[i - 1].lineCount) {
+    cliffs.push(points[i]); // mark this width as a cliff transition
+  }
+}
+
+// Render: area chart with gradient fill on a canvas
+const ctx = canvas.getContext('2d');
+const gradient = ctx.createLinearGradient(0, 0, canvasWidth, 0);
+gradient.addColorStop(0, 'rgba(239, 68, 68, 0.3)');   // red = narrow (many lines)
+gradient.addColorStop(0.5, 'rgba(124, 108, 240, 0.3)'); // purple = mid
+gradient.addColorStop(1, 'rgba(59, 130, 246, 0.15)');   // blue = wide (few lines)
+
+// Draw filled area under the height curve
+ctx.beginPath();
+ctx.moveTo(xPos(points[0].width), yPos(minHeight));
+for (const p of points) ctx.lineTo(xPos(p.width), yPos(p.height));
+ctx.lineTo(xPos(points[points.length - 1].width), yPos(minHeight));
+ctx.closePath();
+ctx.fillStyle = gradient;
+ctx.fill();
+
+// Mark cliffs with vertical dashed lines and green dots
+for (const cliff of cliffs) {
+  ctx.setLineDash([3, 3]);
+  ctx.strokeStyle = '#3ecf8e66';
+  ctx.beginPath();
+  ctx.moveTo(xPos(cliff.width), plotTop);
+  ctx.lineTo(xPos(cliff.width), plotBottom);
+  ctx.stroke();
+  // Label: "4L" means 4 lines at this width
+  ctx.fillText(cliff.lineCount + 'L', xPos(cliff.width), plotTop - 6);
+}`}
 >
   <div class="demo-area" slot="demo">
     <TextTerrainIsland client:only="svelte" />

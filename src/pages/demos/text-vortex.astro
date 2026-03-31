@@ -10,21 +10,75 @@ import TextVortexIsland from '../../islands/demos/TextVortex.svelte';
   context="Every character starts spinning in a colorful vortex. Click Reassemble and watch them smoothly animate to their computed text positions. Click Vortex to scatter them again. The home position of every character comes from Pretext's layout engine."
   apis={['prepareWithSegments()', 'layoutWithLines()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '18px Inter');
-const result = layoutWithLines(prepared, width, 27);
+// --- Setup ---
+const fontSize = 18;
+const lineHeight = fontSize * 1.5; // 27px
+const font = buildFont(fontSize, 'Inter, sans-serif');
+const prepared = prepareWithSegments(text, font);
+const result = layoutWithLines(prepared, maxWidth, lineHeight);
 
-// Get home position for every character
-const particles = extractCharPositions(result.lines);
+// --- Extract character positions & compute polar coordinates ---
+const cx = canvasWidth / 2, cy = canvasHeight / 2;
+const tempCtx = document.createElement('canvas').getContext('2d');
+tempCtx.font = font;
+const particles = [];
 
-// Animate: interpolate between vortex and home positions
-function frame() {
-  const t = transitionProgress; // 0 = vortex, 1 = text
-  particles.forEach(p => {
-    p.x = vortexX(p) * (1 - t) + p.homeX * t;
-    p.y = vortexY(p) * (1 - t) + p.homeY * t;
-  });
+for (let li = 0; li < result.lines.length; li++) {
+  const homeY = margin + li * lineHeight;
+  let homeX = margin;
+  for (const char of result.lines[li].text) {
+    const charW = tempCtx.measureText(char).width;
+    if (char.trim()) {
+      // Polar coords relative to canvas center (for vortex orbit)
+      const dx = homeX - cx, dy = homeY - cy;
+      particles.push({
+        char, homeX, homeY, width: charW,
+        angle: Math.random() * Math.PI * 2,   // random start angle
+        radius: 50 + Math.random() * 200,     // random orbit radius
+        x: homeX, y: homeY, rotation: 0,
+      });
+    }
+    homeX += charW;
+  }
+}
+
+// --- Animation loop: interpolate vortex <-> text ---
+let transitionProgress = 0; // 0 = full vortex, 1 = readable text
+let targetProgress = 0;     // set to 1 for reassembly
+
+function tick() {
+  // Smooth transition toward target
+  transitionProgress += (targetProgress - transitionProgress) * 0.03;
+  const t = transitionProgress;
+
+  for (const p of particles) {
+    // Vortex mode: spin each character around center
+    p.angle += 0.02 + (1 - t) * 0.03; // spin faster when in vortex
+
+    // Compute vortex (chaos) position from polar coords
+    const vortexX = cx + Math.cos(p.angle) * p.radius;
+    const vortexY = cy + Math.sin(p.angle) * p.radius;
+
+    // Lerp between vortex and home (text) position
+    p.x = vortexX * (1 - t) + p.homeX * t;
+    p.y = vortexY * (1 - t) + p.homeY * t;
+
+    // Rotation fades out as text assembles
+    p.rotation = (1 - t) * Math.sin(time * 2 + p.angle) * 0.5;
+  }
+
+  // Color: spinning chars get rainbow hue, settled chars are neutral
+  const hue = (p.angle * 180 / Math.PI + time * 50) % 360;
+  ctx.fillStyle = t < 0.9
+    ? \`hsla(\${hue}, 60%, 70%, \${0.6 + t * 0.4})\`
+    : '#e8e8ed';
+}
+
+// Mode switching: "Reassemble" sets target=1, "Vortex" sets target=0
+function setMode(m) {
+  targetProgress = m === 'text' ? 1 : 0;
 }`}
 >
   <div class="demo-area" slot="demo">

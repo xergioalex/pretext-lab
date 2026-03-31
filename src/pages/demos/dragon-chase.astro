@@ -10,25 +10,81 @@ import DragonChaseIsland from '../../islands/demos/DragonChase.svelte';
   context="Inspired by the viral Pretext dragon demo. Each segment of the dragon acts as a circular obstacle, and layoutNextLine() computes a different available width per line based on which segments overlap. Move your mouse (or wait for auto-orbit) and watch text part around the creature at 60fps."
   apis={['prepareWithSegments()', 'layoutNextLine()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '15px Inter');
+// 40 segments: head is large (r=24), tail tapers to r=3
+const SEGMENT_COUNT = 40;
+const SPACING = 8;
+let segments = Array.from({ length: SEGMENT_COUNT }, (_, i) => {
+  const t = i / (SEGMENT_COUNT - 1);
+  return { x: 400 - i * SPACING, y: 200, radius: 24 * (1 - t * 0.85) + 3 * t };
+});
 
-// Each frame: update dragon, then reflow all text
-function frame() {
-  updateDragonSegments(mouseX, mouseY);
+const font = buildFont(15);
+const prepared = prepareWithSegments(longText, font);
+const lineHeight = 24, pad = 10, margin = 12;
 
+function tick() {
+  // --- Head follows mouse with easing ---
+  const head = segments[0];
+  head.x += (mouseX - head.x) * 0.12;
+  head.y += (mouseY - head.y) * 0.12;
+
+  // --- Chain physics: each segment follows the one before ---
+  for (let i = 1; i < segments.length; i++) {
+    const prev = segments[i - 1], curr = segments[i];
+    const dx = prev.x - curr.x, dy = prev.y - curr.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist > SPACING) {
+      const ratio = SPACING / dist;
+      curr.x = prev.x - dx * ratio;
+      curr.y = prev.y - dy * ratio;
+    }
+  }
+
+  // --- Reflow text around ALL segments ---
   let cursor = { segmentIndex: 0, graphemeIndex: 0 };
   let y = 0;
+  const lines = [];
 
-  while (true) {
-    // Check ALL 40 segments for this line's Y position
-    const width = getWidthAroundDragon(y, segments);
-    const line = layoutNextLine(prepared, cursor, width);
+  while (y < totalHeight + 200) {
+    const lineMid = y + lineHeight / 2;
+    let blockLeft = Infinity, blockRight = 0, hasBlock = false;
+
+    // Check every segment for circle-line collision
+    for (const seg of segments) {
+      const dy = lineMid - seg.y;
+      const r = seg.radius + pad;
+      if (Math.abs(dy) < r) {
+        const dx = Math.sqrt(r * r - dy * dy);
+        blockLeft = Math.min(blockLeft, seg.x - dx);
+        blockRight = Math.max(blockRight, seg.x + dx);
+        hasBlock = true;
+      }
+    }
+
+    let xStart = margin, availWidth = containerWidth - margin * 2;
+
+    if (hasBlock) {
+      // Choose the wider side of the blockage
+      const leftSpace = Math.max(0, blockLeft) - margin;
+      const rightSpace = containerWidth - blockRight - margin;
+      if (leftSpace >= rightSpace && leftSpace > 30) {
+        availWidth = leftSpace;
+      } else if (rightSpace > 30) {
+        availWidth = rightSpace; xStart = blockRight;
+      } else { y += lineHeight; continue; }
+    }
+
+    const line = layoutNextLine(prepared, cursor, Math.max(20, availWidth));
     if (!line) break;
+    lines.push({ text: line.text, x: xStart, y });
     cursor = line.end;
     y += lineHeight;
   }
+
+  renderLines(lines);
+  requestAnimationFrame(tick); // 60fps full reflow
 }`}
 >
   <div class="demo-area" slot="demo">

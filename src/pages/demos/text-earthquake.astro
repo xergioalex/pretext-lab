@@ -10,19 +10,63 @@ import TextEarthquakeIsland from '../../islands/demos/TextEarthquake.svelte';
   context="When you click, a diagonal fault line splits the paragraph. Each half reflows independently using layoutNextLine() with variable widths computed from the fault geometry. The left half gets narrower or wider depending on the fault angle, and the right half fills the remaining space. This demonstrates Pretext's ability to flow text into arbitrary, changing shapes."
   apis={['prepareWithSegments()', 'layoutNextLine()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-// Split text along a diagonal fault line
+const font = buildFont(15);
 const prepared = prepareWithSegments(text, font);
+const lineHeight = 15 * 1.6;
+const margin = 16;
 
-// Left half: width = distance to fault at each y
+// Fault line geometry: a diagonal crack through the paragraph
+// faultX, faultY = click position; faultAngle in degrees
+function getFaultXAtY(y) {
+  const angleRad = (faultAngle * Math.PI) / 180;
+  return faultX + Math.tan(angleRad) * (y - faultY);
+}
+
+// Stable jitter for the crack path — sin-based, not random, so it doesn't
+// flicker on re-render. The magic numbers produce pseudo-random variation.
+function faultPathJitter(i) {
+  return Math.sin(i * 127.1 + faultAngle * 43.7) * 8;
+}
+
+// LEFT HALF: each line's width = distance from left margin to fault
+const halfSep = separation / 2;
+let leftLines = [];
 let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+let y = 0;
+
 while (true) {
-  const widthAtY = faultXAtY(y) - separation/2;
-  const line = layoutNextLine(prepared, cursor, widthAtY);
+  const fx = getFaultXAtY(y + lineHeight / 2); // fault x at line midpoint
+  const availW = Math.max(30, fx - halfSep - margin);
+  const line = layoutNextLine(prepared, cursor, availW);
   if (!line) break;
-  leftLines.push(line);
-  cursor = line.end;
+  leftLines.push({ text: line.text, x: margin - halfSep, y });
+  cursor = line.end; // cursor carries forward — left half gets first portion of text
+  y += lineHeight;
+}
+
+// RIGHT HALF: continues from where left half's cursor ended
+// Each line's width = distance from fault to right edge
+let rightLines = [];
+y = 0;
+
+while (true) {
+  const fx = getFaultXAtY(y + lineHeight / 2);
+  const availW = Math.max(30, containerWidth - margin - fx - halfSep);
+  const line = layoutNextLine(prepared, cursor, availW);
+  if (!line) break;
+  rightLines.push({ text: line.text, x: fx + halfSep, y });
+  cursor = line.end; // continues consuming text after left half
+  y += lineHeight;
+}
+
+// Animate separation with easing toward target
+function tick() {
+  if (Math.abs(separation - targetSeparation) > 0.5) {
+    separation += (targetSeparation - separation) * 0.08; // ease-out
+    recomputeLayout(); // both halves reflow as gap widens
+  }
 }`}
 >
   <div class="demo-area" slot="demo">

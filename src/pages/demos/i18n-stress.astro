@@ -10,17 +10,53 @@ import I18nStressIsland from '../../islands/demos/I18nStress.svelte';
   context="Text layout is globally complex. This page presents curated samples across multiple scripts and edge cases to show both Pretext's capabilities and the inherent difficulty of multilingual text layout."
   apis={['prepare()', 'layout()', 'prepareWithSegments()', 'layoutWithLines()']}
   difficulty="Advanced"
-  snippet={`import { prepareWithSegments, layoutWithLines, setLocale } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-// Set locale for language-specific line breaking
-setLocale('ja'); // Japanese kinsoku rules
+// Define samples across scripts — each stresses different layout rules
+const samples = [
+  { label: 'Chinese', lang: 'zh',
+    text: '天地玄黄，宇宙洪荒。日月盈昃，辰宿列张。' },
+  { label: 'Japanese', lang: 'ja',
+    text: '吾輩は猫である。名前はまだ無い。' },
+  { label: 'Arabic (RTL)', lang: 'ar',
+    text: 'في البدء كانت الكلمة، والكلمة كانت عند الله.' },
+  { label: 'Mixed Bidi', lang: 'mixed',
+    text: 'This contains العربية and 日本語 inline.' },
+  { label: 'Emoji', lang: 'emoji',
+    text: '🎨 Design is how it works ⚙️. Ship it 🚀!' },
+  { label: 'Long unbroken', lang: 'en',
+    text: 'Supercalifragilisticexpialidocious_pneumono...' },
+];
 
-const prepared = prepareWithSegments(japaneseText, '16px sans-serif');
-const result = layoutWithLines(prepared, 400, 26);
+// Build a single font — Pretext uses Canvas API internally
+// for measurement, so Intl.Segmenter handles grapheme clusters
+const font = buildFont(16); // '16px Inter' equivalent
+const lineHeight = 16 * 1.6; // generous for CJK ascenders
+const maxWidth = 400;
 
-// Each line respects CJK break rules, bidi, grapheme clusters
-result.lines.forEach(line => {
-  console.log(line.text, line.width);
+// Layout every sample and compare results across scripts
+const results = samples.map(sample => {
+  const prepared = prepareWithSegments(sample.text, font);
+  const result = layoutWithLines(prepared, maxWidth, lineHeight);
+  return {
+    label: sample.label,
+    lineCount: result.lineCount,
+    height: result.height,
+    // Each line has .text and .width — inspect break decisions
+    lines: result.lines.map(l => ({
+      text: l.text,
+      width: Math.round(l.width),
+    })),
+  };
+});
+
+// CJK: every character is a valid break point
+// Arabic: RTL with different joining forms per position
+// Emoji: grapheme clusters (👨‍👩‍👧 = 1 cluster, multiple codepoints)
+// Unbroken: no break points → overflows or force-breaks
+results.forEach(r => {
+  console.log(r.label, r.lineCount, 'lines', r.height + 'px');
+  r.lines.forEach((l, i) => console.log('  L' + i, l.text, l.width + 'px'));
 });`}
 >
   <div class="demo-area" slot="demo">

@@ -10,23 +10,67 @@ import GravityLettersIsland from '../../islands/demos/GravityLetters.svelte';
   context="Pretext provides the exact home position of every character via layoutWithLines(). Each letter becomes a physics particle that can fall, bounce, and explode. Click Reset to watch them snap back to their computed text positions."
   apis={['prepareWithSegments()', 'layoutWithLines()']}
   difficulty="Spectacular"
-  snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutWithLines, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '22px Inter');
-const result = layoutWithLines(prepared, width, 33);
+// --- Setup ---
+const fontSize = 22;
+const lineHeight = fontSize * 1.5; // 33px
+const font = buildFont(fontSize, 'Inter, sans-serif');
+const margin = 30;
+const maxWidth = canvasWidth - margin * 2;
 
-// Extract exact position of every character
+// --- Prepare & Layout (once) ---
+const prepared = prepareWithSegments(text, font);
+const result = layoutWithLines(prepared, maxWidth, lineHeight);
+
+// --- Extract per-character positions using canvas measureText ---
+const tempCtx = document.createElement('canvas').getContext('2d');
+tempCtx.font = font;
 const letters = [];
-result.lines.forEach((line, li) => {
-  let x = 0;
-  for (const char of line.text) {
-    letters.push({ char, homeX: x, homeY: li * 33 });
-    x += measureChar(char);
-  }
-});
 
-// Now each letter can become a physics particle
-// Reset snaps them back to their homeX/homeY`}
+for (let li = 0; li < result.lines.length; li++) {
+  let x = margin;
+  const y = margin + li * lineHeight;
+  for (const char of result.lines[li].text) {
+    const charW = tempCtx.measureText(char).width;
+    letters.push({
+      char, homeX: x, homeY: y,       // text position (from layout)
+      x, y, vx: 0, vy: 0,             // physics position & velocity
+      rotation: 0, vr: 0, width: charW,
+    });
+    x += charW;
+  }
+}
+
+// --- Physics tick (every animation frame) ---
+const damping = 0.98;  // friction: velocity decays each frame
+const bounce = 0.6;    // energy preserved on wall collision
+for (const L of letters) {
+  L.vx += gravityX * 0.3;  // apply directional gravity
+  L.vy += gravityY * 0.3;
+  L.vx *= damping;          // friction slows everything down
+  L.vy *= damping;
+  L.x += L.vx;
+  L.y += L.vy;
+  L.rotation += L.vr;
+  // Bounce off canvas edges
+  if (L.y > canvasHeight - fontSize) {
+    L.y = canvasHeight - fontSize;
+    L.vy *= -bounce;        // reverse & lose energy
+  }
+}
+
+// --- Velocity-based coloring (faster = more vivid) ---
+const speed = Math.sqrt(L.vx ** 2 + L.vy ** 2);
+const color = speed > 2
+  ? \`hsl(256, 70%, \${55 + Math.min(speed * 3, 30)}%)\`
+  : '#e8e8ed'; // accent glow when fast, neutral when still
+
+// --- Reset: snap every letter back to its Pretext home position ---
+for (const L of letters) {
+  L.x = L.homeX;  L.y = L.homeY;
+  L.vx = 0;  L.vy = 0;  L.rotation = 0;
+}`}
 >
   <div class="demo-area" slot="demo">
     <GravityLettersIsland client:only="svelte" />

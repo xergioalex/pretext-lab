@@ -12,17 +12,51 @@ import ShrinkWrapIsland from '../../islands/demos/ShrinkWrap.svelte';
   difficulty="Intermediate"
   snippet={`import { prepareWithSegments, layoutWithLines } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '18px Inter');
-const result = layoutWithLines(prepared, maxWidth, 27);
+// Use prepareWithSegments (not prepare) to get line-level data.
+// layoutWithLines returns individual lines with their pixel widths.
+const fontSize = 20;
+const lineHeight = fontSize * 1.5; // 30px
+const maxWidth = 500;
+const font = \`\${fontSize}px Inter, sans-serif\`;
 
-// Find the widest line for tight shrink-wrap
-let tightWidth = 0;
+const prepared = prepareWithSegments(text, font);
+const result = layoutWithLines(prepared, maxWidth, lineHeight);
+
+// result.lines is an array — each line has .text and .width.
+// Extract per-line widths to find the widest line.
+const lineWidths: number[] = [];
+let widestLineWidth = 0;
+
 for (const line of result.lines) {
-  if (line.width > tightWidth) tightWidth = line.width;
+  lineWidths.push(Math.round(line.width));
+  if (line.width > widestLineWidth) {
+    widestLineWidth = line.width;
+  }
 }
 
-// Set container to exact tight width
-container.style.width = Math.ceil(tightWidth) + 'px';`}
+// The tight width is the widest line — this is the minimum
+// container width that preserves the same line breaks.
+const tightWidth = Math.ceil(widestLineWidth);
+const spaceSaved = maxWidth - tightWidth;
+
+console.log(\`Lines: \${result.lineCount}\`);
+console.log(\`Max width: \${maxWidth}px\`);
+console.log(\`Widest line: \${tightWidth}px\`);
+console.log(\`Space saved: \${spaceSaved}px\`);
+console.log(\`Per-line widths: \${lineWidths.join(', ')}\`);
+
+// Apply the tight fit — snaps container to exact content width.
+// CSS fit-content does NOT do this for multiline text.
+container.style.width = (tightWidth + 2) + 'px'; // +2 for subpixel safety
+
+// Toggle between loose and tight:
+let isTight = false;
+function toggleTight() {
+  isTight = !isTight;
+  container.style.width = isTight
+    ? (tightWidth + 2) + 'px'
+    : maxWidth + 'px';
+}`}
 >
   <div class="demo-area" slot="demo">
     <ShrinkWrapIsland client:only="svelte" />

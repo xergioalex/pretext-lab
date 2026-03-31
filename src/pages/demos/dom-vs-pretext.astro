@@ -12,16 +12,61 @@ import DomVsPretextIsland from '../../islands/demos/DomVsPretext.svelte';
   difficulty="Conceptual"
   snippet={`import { prepare, layout } from '@chenglou/pretext';
 
-// DOM approach: N elements × M widths = N×M reflows
-// Pretext: prepare N texts once, then layout is arithmetic
+// --- DOM approach: every measurement triggers a reflow ---
+function measureWithDOM(texts: string[], widths: number[]) {
+  const container = document.createElement('div');
+  container.style.cssText =
+    'position:absolute;visibility:hidden;left:-9999px;' +
+    'font:16px Inter,sans-serif;line-height:24px;';
+  document.body.appendChild(container);
 
-const prepared = prepare(text, '16px Inter');
+  const t0 = performance.now();
+  for (const w of widths) {
+    container.style.width = w + 'px';
+    for (const text of texts) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      container.appendChild(div);
+      const _h = div.offsetHeight;  // Forces reflow every time
+      container.removeChild(div);
+    }
+  }
+  const domMs = performance.now() - t0;
+  document.body.removeChild(container);
+  return domMs;
+}
 
-// This runs in ~0.09ms for 500 texts:
-const result = layout(prepared, width, 24);
+// --- Pretext approach: prepare once, layout is arithmetic ---
+function measureWithPretext(texts: string[], widths: number[]) {
+  const font = '16px Inter, sans-serif';
 
-// vs DOM approach: create div, set text, read offsetHeight
-// Each read triggers a full layout reflow`}
+  // Prepare step: ~1ms per text (one-time cost)
+  const t0 = performance.now();
+  const prepareds = texts.map(t => prepare(t, font));
+  const prepareMs = performance.now() - t0;
+
+  // Layout step: ~0.001ms per text per width (pure math)
+  const t1 = performance.now();
+  for (const w of widths) {
+    for (const p of prepareds) layout(p, w, 24);
+  }
+  const layoutMs = performance.now() - t1;
+  return { prepareMs, layoutMs };
+}
+
+// Run comparison: 100 texts × 10 widths = 1000 measurements
+const texts = Array(100).fill('Sample paragraph text...');
+const widths = [150, 200, 250, 300, 350, 400, 450, 500, 550, 600];
+
+const domMs = measureWithDOM(texts, widths);
+const { prepareMs, layoutMs } = measureWithPretext(texts, widths);
+
+// Typical results: DOM ~50ms, Pretext layout ~0.3ms
+const speedup = domMs / (prepareMs + layoutMs);
+console.log(\`DOM: \${domMs.toFixed(1)}ms\`);
+console.log(\`Pretext prepare: \${prepareMs.toFixed(2)}ms (one-time)\`);
+console.log(\`Pretext layout: \${layoutMs.toFixed(2)}ms (hot path)\`);
+console.log(\`Speedup: \${speedup.toFixed(0)}x faster\`);`}
 >
   <div class="demo-area" slot="demo">
     <DomVsPretextIsland client:only="svelte" />

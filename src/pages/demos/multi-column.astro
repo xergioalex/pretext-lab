@@ -10,22 +10,58 @@ import MultiColumnIsland from '../../islands/demos/MultiColumn.svelte';
   context="This demo splits a container into 2 or 3 columns and uses layoutNextLine() to flow text sequentially across them. When one column fills up, the cursor carries forward to the next. A pull quote displaces text in the first column, and a drop cap adds editorial flair."
   apis={['prepareWithSegments()', 'layoutNextLine()']}
   difficulty="Advanced"
-  snippet={`import { prepareWithSegments, layoutNextLine } from '@chenglou/pretext';
+  snippet={`import { prepareWithSegments, layoutNextLine, buildFont } from '@chenglou/pretext';
 
-const prepared = prepareWithSegments(text, '14px Inter');
-const colWidth = (totalWidth - gaps) / columnCount;
+// --- Column geometry ---
+const fontSize = 14;
+const lineHeight = Math.round(fontSize * 1.65); // 23px
+const columnCount = 3;
+const gap = 36;
+const columnHeight = 420;
+const totalGaps = (columnCount - 1) * gap;
+const colWidth = Math.floor((containerWidth - totalGaps) / columnCount);
+
+// --- Pull quote: displaces text in column 1 ---
+const pullQuoteY = Math.round(columnHeight * 0.3);
+const pullQuoteHeight = 80;
+
+// --- Prepare text once, then flow across all columns ---
+const font = buildFont(fontSize);
+const prepared = prepareWithSegments(text, font);
 let cursor = { segmentIndex: 0, graphemeIndex: 0 };
+const columns = [];
 
 for (let col = 0; col < columnCount; col++) {
+  const colX = col * (colWidth + gap);
+  const colLines = [];
   let y = 0;
+
   while (y < columnHeight) {
+    // Skip over pull quote area in the first column
+    if (col === 0 && y >= pullQuoteY && y < pullQuoteY + pullQuoteHeight) {
+      y = pullQuoteY + pullQuoteHeight; // jump past the quote
+      continue;
+    }
+
     const line = layoutNextLine(prepared, cursor, colWidth);
-    if (!line) break;
-    drawLine(line.text, col * (colWidth + gap), y);
-    cursor = line.end;  // cursor carries forward!
+    if (!line) break; // text exhausted
+
+    colLines.push({ text: line.text, x: colX, y });
+    cursor = line.end; // KEY: cursor carries to next column!
     y += lineHeight;
   }
-}`}
+
+  columns.push({ lines: colLines, x: colX, width: colWidth });
+}
+
+// --- Drop cap: render first character at 3x size ---
+const firstLine = columns[0].lines[0];
+const dropCapSize = fontSize * 3;
+// Draw first char large, offset remaining text to the right
+ctx.font = buildFont(dropCapSize);
+ctx.fillText(firstLine.text[0], firstLine.x, firstLine.y);
+ctx.font = font;
+ctx.fillText(firstLine.text.slice(1), firstLine.x + dropCapSize * 0.7, firstLine.y);`}
 >
   <div class="demo-area" slot="demo">
     <MultiColumnIsland client:only="svelte" />
