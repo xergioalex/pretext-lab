@@ -1,0 +1,44 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import EditorialEngineIsland from '../../islands/demos/EditorialEngine.svelte';
+---
+
+<DemoLayout
+  title="Editorial Engine"
+  summary="A flagship demo: editorial layout with pull quotes, flowing text, and dynamic columns."
+  context="This is the most ambitious demo in the lab. It combines layoutNextLine() with obstacle avoidance to create an editorial layout where text flows around a pull quote block. The result looks like a print magazine layout, computed entirely in JavaScript."
+  apis={['prepareWithSegments()', 'layoutNextLine()', 'layoutWithLines()']}
+  difficulty="Flagship"
+>
+  <div class="demo-area">
+    <EditorialEngineIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        An editorial-quality text layout with a pull quote that text flows around. Each line is laid
+        out individually with <code>layoutNextLine()</code>, and the available width changes based on
+        whether the line overlaps with the pull quote. Features include a drop cap and dynamic column width.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments(text, font)</code> — prepare the article text</li>
+        <li><code>layoutNextLine(prepared, cursor, maxWidth)</code> — variable width per line</li>
+        <li><code>LayoutCursor</code> — tracks position through the text</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is the flagship</h3>
+      <p>
+        This demo combines multiple Pretext capabilities: per-line width control, obstacle avoidance,
+        full text flow, and dynamic relayout. It shows that Pretext enables layout patterns that have
+        existed in print typesetting but were impractical on the web. The result is a layout engine,
+        not just a measurement tool.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

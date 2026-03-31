@@ -1,0 +1,42 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import ResizeRelayoutIsland from '../../islands/demos/ResizeRelayout.svelte';
+---
+
+<DemoLayout
+  title="Resize Relayout Playground"
+  summary="Drag a width slider and watch dozens of text blocks relayout in real time."
+  context="This demonstrates the performance advantage of Pretext's prepare-once model. All text blocks are prepared once, then relayouted cheaply as you drag the width slider. In a traditional DOM approach, each block would trigger a separate reflow."
+  apis={['prepare()', 'layout()']}
+  difficulty="Beginner"
+>
+  <div class="demo-area">
+    <ResizeRelayoutIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Batch relayout of many text blocks at interactive frame rates. Each block was prepared once;
+        changing the container width only calls <code>layout()</code> — the fast path. This pattern
+        applies to resizable panels, split panes, and any adaptive container.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepare(text, font)</code> — called once per block</li>
+        <li><code>layout(prepared, maxWidth, lineHeight)</code> — called on every resize</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is hard with the DOM</h3>
+      <p>
+        With DOM-based measurement, resizing N text blocks requires N reflows. Each reflow forces the
+        browser to recalculate layout for the entire page. As N grows, this becomes a performance cliff.
+        Pretext makes the per-block cost negligible.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

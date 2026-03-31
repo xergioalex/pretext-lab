@@ -1,0 +1,43 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import DragonChaseIsland from '../../islands/demos/DragonChase.svelte';
+---
+
+<DemoLayout
+  title="Dragon Chase"
+  summary="A 40-segment dragon follows your cursor while text reflows around every segment in real time."
+  context="Inspired by the viral Pretext dragon demo. Each segment of the dragon acts as a circular obstacle, and layoutNextLine() computes a different available width per line based on which segments overlap. Move your mouse (or wait for auto-orbit) and watch text part around the creature at 60fps."
+  apis={['prepareWithSegments()', 'layoutNextLine()']}
+  difficulty="Spectacular"
+>
+  <div class="demo-area">
+    <DragonChaseIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Per-line variable-width layout with dozens of simultaneous obstacles. Each of the 40 dragon segments
+        is a circle that blocks text. For every line, the engine checks all segments, computes the available
+        width, and calls <code>layoutNextLine()</code> with that width. The entire reflow happens every animation frame.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments(text, font)</code> — prepare once for the full text</li>
+        <li><code>layoutNextLine(prepared, cursor, maxWidth)</code> — called per line with variable width</li>
+        <li><code>LayoutCursor</code> — tracks position through the text between lines</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is impressive</h3>
+      <p>
+        This demo performs hundreds of <code>layoutNextLine()</code> calls per frame — one per visible line —
+        with a different width for each. Traditional DOM measurement would require hundreds of reflows per
+        frame, making this interaction impossible at 60fps. With Pretext, it's smooth arithmetic.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

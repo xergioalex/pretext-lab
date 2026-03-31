@@ -1,0 +1,151 @@
+export interface DemoMeta {
+  slug: string;
+  title: string;
+  summary: string;
+  category: 'foundational' | 'practical' | 'advanced' | 'spectacular';
+  featured: boolean;
+  flagship: boolean;
+  apis: string[];
+  difficulty: string;
+}
+
+export const demos: DemoMeta[] = [
+  {
+    slug: 'measure-height',
+    title: 'Basic Paragraph Measurement',
+    summary: 'Prepare once, measure at any width instantly — the core Pretext workflow.',
+    category: 'foundational',
+    featured: true,
+    flagship: false,
+    apis: ['prepare()', 'layout()'],
+    difficulty: 'Beginner',
+  },
+  {
+    slug: 'resize-relayout',
+    title: 'Resize Relayout Playground',
+    summary: 'Drag a width slider and watch dozens of text blocks relayout in real time.',
+    category: 'foundational',
+    featured: true,
+    flagship: false,
+    apis: ['prepare()', 'layout()'],
+    difficulty: 'Beginner',
+  },
+  {
+    slug: 'shrink-wrap',
+    title: 'Tight Multiline Shrink-Wrap',
+    summary: 'Compute the tightest bounding box for wrapped text — no trial-and-error needed.',
+    category: 'foundational',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutWithLines()'],
+    difficulty: 'Intermediate',
+  },
+  {
+    slug: 'dom-vs-pretext',
+    title: 'DOM vs Pretext Architecture',
+    summary: 'A side-by-side comparison of traditional DOM measurement vs Pretext\'s prepare/layout model.',
+    category: 'foundational',
+    featured: true,
+    flagship: false,
+    apis: ['prepare()', 'layout()'],
+    difficulty: 'Conceptual',
+  },
+  {
+    slug: 'masonry-cards',
+    title: 'Text-Aware Masonry Cards',
+    summary: 'Pack cards into a masonry grid by predicting text heights before rendering.',
+    category: 'practical',
+    featured: true,
+    flagship: false,
+    apis: ['prepare()', 'layout()'],
+    difficulty: 'Intermediate',
+  },
+  {
+    slug: 'chat-bubbles',
+    title: 'Chat & Feed Bubbles',
+    summary: 'Size chat bubbles perfectly and handle width changes gracefully.',
+    category: 'practical',
+    featured: true,
+    flagship: false,
+    apis: ['prepare()', 'layout()', 'layoutWithLines()'],
+    difficulty: 'Intermediate',
+  },
+  {
+    slug: 'canvas-layout',
+    title: 'Canvas Text Layout',
+    summary: 'Compute line breaks with Pretext and render to <canvas> — beyond the DOM.',
+    category: 'practical',
+    featured: false,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutWithLines()'],
+    difficulty: 'Intermediate',
+  },
+  {
+    slug: 'i18n-stress',
+    title: 'Multilingual Stress Test',
+    summary: 'Test Pretext against CJK, Arabic, emoji, bidi, and edge-case scripts.',
+    category: 'practical',
+    featured: false,
+    flagship: false,
+    apis: ['prepare()', 'layout()', 'setLocale()'],
+    difficulty: 'Advanced',
+  },
+  {
+    slug: 'flow-around-obstacle',
+    title: 'Flow Around Obstacle',
+    summary: 'Text flows dynamically around a draggable shape — line by line layout control.',
+    category: 'advanced',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutNextLine()'],
+    difficulty: 'Advanced',
+  },
+  {
+    slug: 'rich-text-lines',
+    title: 'Rich Inline Segments',
+    summary: 'Layout text with mixed styles, code spans, and inline badges using segments.',
+    category: 'advanced',
+    featured: false,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutWithLines()'],
+    difficulty: 'Advanced',
+  },
+  {
+    slug: 'editorial-engine',
+    title: 'Editorial Engine',
+    summary: 'Editorial layout with floating orbs that displace text in real time.',
+    category: 'advanced',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutNextLine()', 'layoutWithLines()'],
+    difficulty: 'Flagship',
+  },
+  {
+    slug: 'dragon-chase',
+    title: 'Dragon Chase',
+    summary: 'A 40-segment dragon follows your cursor — text reflows around every segment at 60fps.',
+    category: 'spectacular',
+    featured: true,
+    flagship: true,
+    apis: ['prepareWithSegments()', 'layoutNextLine()'],
+    difficulty: 'Spectacular',
+  },
+  {
+    slug: 'wave-distortion',
+    title: 'Wave Distortion',
+    summary: 'A sine wave continuously warps line widths — mesmerizing flowing text animation.',
+    category: 'spectacular',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutNextLine()'],
+    difficulty: 'Spectacular',
+  },
+];
+
+export function getFeaturedDemos(): DemoMeta[] {
+  return demos.filter((d) => d.featured);
+}
+
+export function getDemosByCategory(category: DemoMeta['category']): DemoMeta[] {
+  return demos.filter((d) => d.category === category);
+}

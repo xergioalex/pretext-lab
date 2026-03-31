@@ -1,0 +1,324 @@
+---
+const base = import.meta.env.BASE_URL;
+
+const demos = [
+  { slug: 'measure-height', title: 'Measure Height' },
+  { slug: 'resize-relayout', title: 'Resize Relayout' },
+  { slug: 'shrink-wrap', title: 'Shrink-Wrap' },
+  { slug: 'flow-around-obstacle', title: 'Flow Around Obstacle' },
+  { slug: 'masonry-cards', title: 'Masonry Cards' },
+  { slug: 'chat-bubbles', title: 'Chat Bubbles' },
+  { slug: 'rich-text-lines', title: 'Rich Text Lines' },
+  { slug: 'canvas-layout', title: 'Canvas Layout' },
+  { slug: 'i18n-stress', title: 'i18n Stress Test' },
+  { slug: 'dom-vs-pretext', title: 'DOM vs Pretext' },
+  { slug: 'editorial-engine', title: 'Editorial Engine' },
+  { slug: 'dragon-chase', title: 'Dragon Chase' },
+  { slug: 'wave-distortion', title: 'Wave Distortion' },
+];
+---
+
+<nav class="nav">
+  <div class="nav-inner container">
+    <a href={base} class="nav-logo">
+      <span class="logo-icon">P</span>
+      <span class="logo-text">Pretext Lab</span>
+    </a>
+
+    <div class="nav-links">
+      <a href={base} class="nav-link">Home</a>
+      <div class="nav-dropdown">
+        <button class="nav-link dropdown-trigger" aria-expanded="false">
+          Demos <span class="caret">▾</span>
+        </button>
+        <div class="dropdown-menu">
+          {demos.map((d) => (
+            <a href={`${base}demos/${d.slug}/`} class="dropdown-item">{d.title}</a>
+          ))}
+        </div>
+      </div>
+      <button class="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark mode">
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <a href="https://github.com/xergioalex/pretext-minilab" class="nav-link nav-github" target="_blank" rel="noopener">
+        GitHub
+      </a>
+    </div>
+
+    <button class="theme-toggle theme-toggle-mobile" aria-label="Toggle theme" title="Toggle light/dark mode">
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+    <button class="nav-mobile-toggle" aria-label="Toggle menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<div class="mobile-menu">
+  <a href={base} class="mobile-link">Home</a>
+  <div class="mobile-section-title">Demos</div>
+  {demos.map((d) => (
+    <a href={`${base}demos/${d.slug}/`} class="mobile-link mobile-demo-link">{d.title}</a>
+  ))}
+  <a href="https://github.com/xergioalex/pretext-minilab" class="mobile-link" target="_blank" rel="noopener">GitHub</a>
+</div>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    height: var(--nav-height);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    background: var(--bg-nav);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+  }
+
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    text-decoration: none;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .logo-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: var(--radius-sm);
+    font-weight: 800;
+    font-size: 1rem;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  .nav-link {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+
+  .nav-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+
+  .nav-dropdown {
+    position: relative;
+  }
+
+  .dropdown-trigger {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .caret {
+    font-size: 0.7em;
+    transition: transform var(--transition-fast);
+  }
+
+  .dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-fast);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .nav-dropdown:hover .dropdown-menu,
+  .nav-dropdown:focus-within .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .nav-dropdown:hover .caret {
+    transform: rotate(180deg);
+  }
+
+  .dropdown-item {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .dropdown-item:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+
+  .nav-mobile-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-sm);
+  }
+
+  .nav-mobile-toggle span {
+    width: 20px;
+    height: 2px;
+    background: var(--text-secondary);
+    border-radius: 1px;
+    transition: all var(--transition-fast);
+  }
+
+  .mobile-menu {
+    display: none;
+    position: fixed;
+    top: var(--nav-height);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99;
+    background: var(--bg-primary);
+    padding: var(--space-lg);
+    overflow-y: auto;
+  }
+
+  .mobile-menu.open {
+    display: block;
+  }
+
+  .mobile-link {
+    display: block;
+    padding: var(--space-sm) var(--space-md);
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+  }
+
+  .mobile-link:hover {
+    color: var(--text-primary);
+    background: var(--bg-card);
+  }
+
+  .mobile-demo-link {
+    padding-left: var(--space-xl);
+    font-size: 0.9rem;
+  }
+
+  .mobile-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    padding: var(--space-md) var(--space-md) var(--space-xs);
+    margin-top: var(--space-sm);
+  }
+
+  /* Theme toggle */
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+  }
+
+  .theme-toggle:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  /* Show sun in dark mode, moon in light mode */
+  .icon-sun { display: none; }
+  .icon-moon { display: block; }
+
+  :global([data-theme="dark"]) .icon-sun { display: block; }
+  :global([data-theme="dark"]) .icon-moon { display: none; }
+  :global([data-theme="light"]) .icon-sun { display: none; }
+  :global([data-theme="light"]) .icon-moon { display: block; }
+
+  .theme-toggle-mobile {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .nav-links {
+      display: none;
+    }
+    .nav-mobile-toggle {
+      display: flex;
+    }
+    .theme-toggle-mobile {
+      display: flex;
+    }
+  }
+</style>
+
+<script>
+  // Mobile menu
+  const toggle = document.querySelector('.nav-mobile-toggle');
+  const menu = document.querySelector('.mobile-menu');
+  toggle?.addEventListener('click', () => {
+    menu?.classList.toggle('open');
+  });
+
+  // Theme toggle
+  function setTheme(theme: string) {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
+
+  document.querySelectorAll('.theme-toggle').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  });
+</script>

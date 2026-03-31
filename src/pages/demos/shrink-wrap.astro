@@ -1,0 +1,43 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import ShrinkWrapIsland from '../../islands/demos/ShrinkWrap.svelte';
+---
+
+<DemoLayout
+  title="Tight Multiline Shrink-Wrap"
+  summary="Compute the tightest bounding box for wrapped text — no trial-and-error needed."
+  context="Shrink-wrapping multiline text to its tightest possible width is surprisingly awkward with CSS alone. Pretext gives you the exact widest line width, so you can snap the container to a perfect tight fit."
+  apis={['prepareWithSegments()', 'layoutWithLines()']}
+  difficulty="Intermediate"
+>
+  <div class="demo-area">
+    <ShrinkWrapIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Using <code>layoutWithLines()</code> to get individual line widths, then computing the
+        tightest bounding box. The "Snap to tight fit" button sets the container width to the
+        widest line — a clean, computed value instead of a guess.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments(text, font)</code> — richer prepare for line-level data</li>
+        <li><code>layoutWithLines(prepared, maxWidth, lineHeight)</code> — returns lines with widths</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is hard with the DOM</h3>
+      <p>
+        CSS <code>width: fit-content</code> exists but does not tightly wrap multiline text.
+        Getting the widest line width requires rendering, reading <code>Range</code> or
+        <code>getClientRects()</code>, and measuring — a fragile, slow process.
+        Pretext gives you the answer directly.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

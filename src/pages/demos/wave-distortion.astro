@@ -1,0 +1,42 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import WaveDistortionIsland from '../../islands/demos/WaveDistortion.svelte';
+---
+
+<DemoLayout
+  title="Wave Distortion"
+  summary="A sine wave continuously distorts the text column width — every line has a different width, updated every frame."
+  context="This demo creates a mesmerizing flowing effect by applying a sine wave to the available width of each line. The wave animates continuously, and the text reflows smoothly to fill the undulating shape. Adjust amplitude, frequency, and speed to create different wave patterns."
+  apis={['prepareWithSegments()', 'layoutNextLine()']}
+  difficulty="Spectacular"
+>
+  <div class="demo-area">
+    <WaveDistortionIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Continuous per-line variable-width layout driven by a mathematical function. Each line's available
+        width is computed from a sine wave, creating a flowing shape that the text fills. The wave phase
+        animates every frame, causing the entire text to reflow continuously.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments(text, font)</code> — prepare once</li>
+        <li><code>layoutNextLine(prepared, cursor, maxWidth)</code> — different width per line, driven by sine wave</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is hard with the DOM</h3>
+      <p>
+        There is no CSS property that varies container width per line of text. CSS shapes and floats
+        only offer limited control. With Pretext, any mathematical function can determine line widths —
+        sine waves, Perlin noise, physics simulations, or user-driven interactions.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

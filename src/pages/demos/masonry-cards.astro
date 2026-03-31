@@ -1,0 +1,42 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import MasonryCardsIsland from '../../islands/demos/MasonryCards.svelte';
+---
+
+<DemoLayout
+  title="Text-Aware Masonry Cards"
+  summary="Pack cards into a masonry grid by predicting text heights before rendering."
+  context="Masonry grids need to know card heights before positioning them. When cards contain text, that height depends on the content, font, and available width. Pretext makes this a computation instead of a measurement."
+  apis={['prepare()', 'layout()']}
+  difficulty="Intermediate"
+>
+  <div class="demo-area">
+    <MasonryCardsIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Using Pretext to predict the height of each card's text content, then packing cards into
+        columns using a shortest-column-first algorithm. All dimensions are known before any card is
+        rendered, eliminating layout shift.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepare(text, font)</code> — one call per card text</li>
+        <li><code>layout(prepared, width, lineHeight)</code> — get height for packing</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is hard with the DOM</h3>
+      <p>
+        Traditional masonry grids render cards first, then read their heights, then reposition them.
+        This causes visible layout shift and requires multiple DOM operations. With Pretext, the grid
+        can be fully computed before any element enters the DOM.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

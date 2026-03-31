@@ -1,0 +1,66 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  title: string;
+  summary: string;
+  context: string;
+  apis: string[];
+  difficulty: string;
+}
+
+const { title, summary, context, apis, difficulty } = Astro.props;
+const base = import.meta.env.BASE_URL;
+---
+
+<BaseLayout title={`${title} — Pretext Mini-Lab`} description={summary}>
+  <div class="demo-page container">
+    <a href={base} class="back-link">&larr; Back to all demos</a>
+
+    <div class="demo-header">
+      <div class="demo-meta">
+        <span class="badge">{difficulty}</span>
+        {apis.map((api) => (
+          <code class="api-tag">{api}</code>
+        ))}
+      </div>
+      <h1>{title}</h1>
+      <p class="summary">{summary}</p>
+      <p class="context">{context}</p>
+    </div>
+
+    <slot />
+  </div>
+</BaseLayout>
+
+<style>
+  .back-link {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: var(--space-xl);
+    transition: color var(--transition-fast);
+  }
+
+  .back-link:hover {
+    color: var(--accent);
+  }
+
+  .demo-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
+
+  .api-tag {
+    font-size: 0.75rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 0.2em 0.6em;
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+  }
+</style>

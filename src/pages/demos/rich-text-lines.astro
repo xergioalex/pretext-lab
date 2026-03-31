@@ -1,0 +1,42 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import RichTextLinesIsland from '../../islands/demos/RichTextLines.svelte';
+---
+
+<DemoLayout
+  title="Rich Inline Segments"
+  summary="Layout text with mixed styles, code spans, and inline badges using segments."
+  context="Real content is rarely plain text. This demo shows how Pretext handles text that will be rendered with mixed inline styles — bold, code, accent colors, and badges — by computing line breaks on the full text and mapping styled segments back to each line."
+  apis={['prepareWithSegments()', 'layoutWithLines()']}
+  difficulty="Advanced"
+>
+  <div class="demo-area">
+    <RichTextLinesIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        A simplified rich text rendering approach: Pretext computes line breaks on the concatenated
+        plain text, then the renderer maps character positions back to styled segments. Each line is
+        rendered with the correct inline styles for its content.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments()</code> — prepare text with segment-level data</li>
+        <li><code>layoutWithLines()</code> — get line-level text and positions</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Limitations and tradeoffs</h3>
+      <p>
+        This demo uses a single font for line-break computation, even though the rendered segments
+        have different visual styles. For production-grade rich text, you would need per-segment
+        measurement. This demo shows the concept and the API ergonomics, not a complete rich text engine.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

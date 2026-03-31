@@ -1,0 +1,42 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import ChatBubblesIsland from '../../islands/demos/ChatBubbles.svelte';
+---
+
+<DemoLayout
+  title="Chat & Feed Bubbles"
+  summary="Size chat bubbles perfectly and handle width changes gracefully."
+  context="Chat UIs need to size bubbles to fit their content, handle container resizes (mobile rotation, split view), and potentially virtualize hundreds of messages. Pretext makes all of this practical."
+  apis={['prepare()', 'layout()']}
+  difficulty="Intermediate"
+>
+  <div class="demo-area">
+    <ChatBubblesIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        A realistic chat interface where every bubble is sized using Pretext. Drag the width slider
+        to see all bubbles relayout smoothly. Each bubble's height is computed, not measured from the DOM.
+        You can also add new messages interactively.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepare(text, font)</code> — per message, once</li>
+        <li><code>layout(prepared, maxWidth, lineHeight)</code> — per message, on resize</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is a real use case</h3>
+      <p>
+        Chat apps need instant bubble sizing for scroll positioning, virtualization, and resize handling.
+        This is not a flashy demo — it is one of the most common real-world applications of programmable
+        text measurement. Apps like iMessage, WhatsApp, and Slack all solve this problem.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

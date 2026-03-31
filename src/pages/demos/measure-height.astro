@@ -1,0 +1,43 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import MeasureHeightIsland from '../../islands/demos/MeasureHeight.svelte';
+---
+
+<DemoLayout
+  title="Basic Paragraph Measurement"
+  summary="Prepare once, measure at any width instantly — the core Pretext workflow."
+  context="This demo shows the fundamental prepare/layout cycle. Type any text, adjust the width slider, and watch Pretext compute height and line count without touching the DOM. Notice how prepare() is called only when text or font changes, while layout() runs on every width adjustment."
+  apis={['prepare()', 'layout()']}
+  difficulty="Beginner"
+>
+  <div class="demo-area">
+    <MeasureHeightIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        The two-phase architecture of Pretext: <code>prepare()</code> does one-time text analysis (Unicode segmentation,
+        word boundaries, font measurement), and <code>layout()</code> computes dimensions using pure arithmetic.
+        Resizing is the hot path — it should be fast, and it is.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepare(text, font)</code> — one-time analysis, returns opaque handle</li>
+        <li><code>layout(prepared, maxWidth, lineHeight)</code> — returns &#123; height, lineCount &#125;</li>
+        <li><code>profilePrepare()</code> — timing breakdown of the prepare step</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this is hard with the DOM</h3>
+      <p>
+        Traditionally, measuring text height requires rendering it in a hidden element and reading
+        <code>offsetHeight</code> — which triggers a layout reflow. Every width change means another reflow.
+        With Pretext, the expensive work happens once, and relayout at any width is instant arithmetic.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

@@ -1,0 +1,42 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import CanvasLayoutIsland from '../../islands/demos/CanvasLayout.svelte';
+---
+
+<DemoLayout
+  title="Canvas Text Layout"
+  summary="Compute line breaks with Pretext and render to <canvas> — beyond the DOM."
+  context="Canvas does not have built-in multiline text rendering. Pretext provides the line-breaking logic, so you can render text to any target — Canvas 2D, WebGL, or any custom renderer."
+  apis={['prepareWithSegments()', 'layoutWithLines()']}
+  difficulty="Intermediate"
+>
+  <div class="demo-area">
+    <CanvasLayoutIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Pretext computes line breaks and positions. The canvas simply draws each line at its computed
+        position. This decoupling means the same layout engine works for DOM, Canvas, SVG, WebGL,
+        or even server-side rendering.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments(text, font)</code> — get segments for full line data</li>
+        <li><code>layoutWithLines(prepared, width, lineHeight)</code> — returns lines with text and widths</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Why this matters</h3>
+      <p>
+        Canvas-based text editors, game UIs, data visualization labels, and custom rendering engines
+        all need line breaking. Without Pretext, you have to implement your own or hack it through
+        hidden DOM elements. Pretext gives you correct, Unicode-aware line breaking as a pure function.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

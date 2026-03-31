@@ -1,0 +1,43 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import I18nStressIsland from '../../islands/demos/I18nStress.svelte';
+---
+
+<DemoLayout
+  title="Multilingual Stress Test"
+  summary="Test Pretext against CJK, Arabic, emoji, bidi, and edge-case scripts."
+  context="Text layout is globally complex. This page presents curated samples across multiple scripts and edge cases to show both Pretext's capabilities and the inherent difficulty of multilingual text layout."
+  apis={['prepare()', 'layout()', 'prepareWithSegments()', 'layoutWithLines()']}
+  difficulty="Advanced"
+>
+  <div class="demo-area">
+    <I18nStressIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        Pretext's handling of diverse Unicode text: CJK characters with per-character break opportunities,
+        Japanese kinsoku rules, Arabic RTL text, mixed bidirectional content, emoji grapheme clusters,
+        and edge cases like long unbroken strings.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments()</code> — for line-level data per script</li>
+        <li><code>layoutWithLines()</code> — to see exact line breaks per sample</li>
+        <li><code>setLocale()</code> — for locale-specific line breaking rules</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>An honest assessment</h3>
+      <p>
+        No text layout system handles every script perfectly. Pretext covers a wide range of cases
+        including CJK, emoji, and bidi, but rendering can vary across browsers and fonts. This page
+        exists to demonstrate real-world complexity, not to claim perfection.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

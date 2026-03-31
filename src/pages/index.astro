@@ -1,0 +1,280 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { demos } from '../lib/content/demos';
+
+const base = import.meta.env.BASE_URL;
+
+const categoryColors: Record<string, string> = {
+  foundational: '#3ecf8e',
+  practical: '#f5a623',
+  advanced: '#ef4444',
+  spectacular: '#d946ef',
+};
+
+const demoIcons: Record<string, string> = {
+  'measure-height': '📐',
+  'resize-relayout': '↔️',
+  'shrink-wrap': '📦',
+  'dom-vs-pretext': '⚡',
+  'masonry-cards': '🧱',
+  'chat-bubbles': '💬',
+  'canvas-layout': '🎨',
+  'i18n-stress': '🌍',
+  'flow-around-obstacle': '🌊',
+  'rich-text-lines': '✨',
+  'editorial-engine': '📰',
+  'dragon-chase': '🐉',
+  'wave-distortion': '🌊',
+};
+---
+
+<BaseLayout title="Pretext Mini-Lab — Programmable Text Layout for the Web">
+  <section class="hero">
+    <div class="container hero-inner">
+      <h1 class="hero-title">
+        <span class="gradient-text">Pretext</span> Mini-Lab
+      </h1>
+      <p class="hero-sub">
+        Interactive demos exploring programmable text layout with
+        <a href="https://github.com/chenglou/pretext" target="_blank" rel="noopener">@chenglou/pretext</a>.
+        <code>prepare()</code> once, <code>layout()</code> at any width — instantly.
+      </p>
+      <p class="hero-author">
+        by <a href="https://xergioalex.com" target="_blank" rel="noopener">Sergio Florez (XergioAleX)</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="demos-section">
+    <div class="container">
+      <div class="demo-grid">
+        {demos.map((demo) => (
+          <a href={`${base}demos/${demo.slug}/`} class:list={['demo-card', { flagship: demo.flagship }]}>
+            <div class="card-body">
+              <div class="card-top">
+                <span class="card-dot" style={`background: ${categoryColors[demo.category]}`}></span>
+                <span class="card-difficulty">{demo.difficulty}</span>
+                {demo.flagship && <span class="flagship-tag">Flagship</span>}
+              </div>
+              <h2 class="card-title">
+                <span class="card-emoji">{demoIcons[demo.slug] || '🔬'}</span>
+                {demo.title}
+              </h2>
+              <p class="card-summary">{demo.summary}</p>
+              <div class="card-apis">
+                {demo.apis.map((api) => <code>{api}</code>)}
+              </div>
+            </div>
+            <div class="card-arrow">→</div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    padding: var(--space-2xl) 0 var(--space-lg);
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    position: relative;
+    text-align: center;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: var(--space-sm);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, var(--accent) 0%, #a78bfa 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero-sub {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .hero-sub a {
+    font-weight: 600;
+  }
+
+  .hero-author {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-top: var(--space-sm);
+    text-align: center;
+  }
+
+  .hero-author a {
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .hero-author a:hover {
+    color: var(--accent);
+  }
+
+  .demos-section {
+    padding: var(--space-2xl) 0 var(--space-4xl);
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-md);
+  }
+
+  @media (max-width: 1024px) {
+    .demo-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    .demo-grid { grid-template-columns: 1fr; }
+  }
+
+  .demo-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg) var(--space-xl);
+    text-decoration: none;
+    color: inherit;
+    transition: all var(--transition-base);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .demo-card:hover {
+    border-color: var(--accent);
+    background: var(--bg-card-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(124, 108, 240, 0.1);
+    color: inherit;
+  }
+
+  .demo-card.flagship {
+    border-color: var(--border-accent);
+    background: linear-gradient(135deg, var(--bg-card) 0%, var(--accent-dim) 100%);
+  }
+
+  .card-body {
+    flex: 1;
+  }
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xs);
+  }
+
+  .card-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .card-difficulty {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .flagship-tag {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 0.15em 0.6em;
+    border-radius: 9999px;
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .card-emoji {
+    margin-right: 6px;
+  }
+
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.01em;
+  }
+
+  .card-summary {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .card-apis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: var(--space-sm);
+  }
+
+  .card-apis code {
+    font-size: 0.68rem;
+    padding: 0.15em 0.4em;
+    background: var(--bg-surface);
+    border: 1px solid var(--border);
+  }
+
+  .card-arrow {
+    position: absolute;
+    bottom: var(--space-lg);
+    right: var(--space-xl);
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    transition: all var(--transition-fast);
+  }
+
+  .demo-card:hover .card-arrow {
+    color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  @media (max-width: 768px) {
+    .demo-grid {
+      grid-template-columns: 1fr;
+    }
+    .demo-card.flagship {
+      grid-column: 1;
+    }
+  }
+</style>
