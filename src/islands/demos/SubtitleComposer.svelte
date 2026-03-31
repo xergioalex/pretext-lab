@@ -5,9 +5,9 @@
 
   let wrapperWidth = $state(0);
   let currentTime = $state(0);
-  let playing = $state(false);
+  let playing = $state(true);
   let safeWidth = $state(78);
-  let bottomOffset = $state(12);
+  let bottomOffset = $state(6);
   let emphasizeSpeaker = $state(true);
   let frameHandle = 0;
 
@@ -48,7 +48,10 @@
     frameHandle = requestAnimationFrame(tick);
   }
 
-  onMount(() => () => cancelAnimationFrame(frameHandle));
+  onMount(() => {
+    frameHandle = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameHandle);
+  });
 
   $effect(() => {
     if (playing) {
@@ -143,8 +146,9 @@
   .stat-pill.accent { color: var(--accent); border-color: var(--border-accent); }
 
   .video-stage {
-    position: relative; aspect-ratio: 16 / 9; overflow: hidden;
+    position: relative; height: clamp(260px, 42vh, 420px); overflow: hidden;
     border-radius: var(--radius-lg); border: 1px solid var(--border);
+    max-width: 55%; margin: 0 auto;
     background:
       radial-gradient(circle at 20% 30%, rgba(124, 108, 240, 0.18), transparent 26%),
       radial-gradient(circle at 78% 22%, rgba(62, 207, 142, 0.12), transparent 20%),
