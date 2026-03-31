@@ -3,7 +3,7 @@
   import type { LayoutCursor } from '../../lib/pretext';
   import { onMount, untrack } from 'svelte';
 
-  const fullText = SAMPLE_TEXTS.long;
+  const fullText = `${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial}`;
 
   let wrapperWidth = $state(0);
   let containerWidth = $derived(wrapperWidth > 0 ? Math.min(wrapperWidth - 16, 900) : 700);

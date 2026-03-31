@@ -3,7 +3,7 @@
   import type { LayoutCursor } from '../../lib/pretext';
   import { onMount } from 'svelte';
 
-  const longText = `${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.medium}`;
+  const longText = `${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.medium}`;
 
   let fontSize = $state(14);
   let shapeSize = $state(380);

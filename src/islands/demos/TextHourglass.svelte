@@ -3,8 +3,8 @@
   import type { LayoutCursor } from '../../lib/pretext';
   import { onMount } from 'svelte';
 
-  const topText = `${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial}`;
-  const bottomText = `${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.long}`;
+  const topText = `${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.long}`;
+  const bottomText = `${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.editorial}`;
 
   let fontSize = $state(14);
   let hourglassHeight = $state(550);
