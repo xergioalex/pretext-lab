@@ -1,0 +1,44 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import TextVortexIsland from '../../islands/demos/TextVortex.svelte';
+---
+
+<DemoLayout
+  title="Text Vortex"
+  summary="Characters spin in a vortex, then smoothly reassemble into readable text — and back again."
+  context="Every character starts spinning in a colorful vortex. Click Reassemble and watch them smoothly animate to their computed text positions. Click Vortex to scatter them again. The home position of every character comes from Pretext's layout engine."
+  apis={['prepareWithSegments()', 'layoutWithLines()']}
+  difficulty="Spectacular"
+>
+  <div class="demo-area">
+    <TextVortexIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        The duality of text: characters are both "content to be read" and "particles to be animated."
+        Pretext provides the exact target position for reassembly. The smooth transition between
+        chaos and order is only possible because we know where every character belongs without
+        rendering the text first.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments()</code> — analyze text structure</li>
+        <li><code>layoutWithLines()</code> — compute home position for every character</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Modes</h3>
+      <p>
+        <strong>Vortex</strong> — characters orbit the center.
+        <strong>Spiral</strong> — characters move in expanding spirals.
+        <strong>Circle</strong> — characters orbit at fixed radii.
+        <strong>Reassemble</strong> — characters smoothly return to readable text.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

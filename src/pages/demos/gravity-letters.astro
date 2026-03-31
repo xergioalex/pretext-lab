@@ -1,0 +1,43 @@
+---
+import DemoLayout from '../../layouts/DemoLayout.astro';
+import GravityLettersIsland from '../../islands/demos/GravityLetters.svelte';
+---
+
+<DemoLayout
+  title="Gravity Letters"
+  summary="Individual letters fall, bounce, and explode with physics — then reassemble into readable text."
+  context="Pretext provides the exact home position of every character via layoutWithLines(). Each letter becomes a physics particle that can fall, bounce, and explode. Click Reset to watch them snap back to their computed text positions."
+  apis={['prepareWithSegments()', 'layoutWithLines()']}
+  difficulty="Spectacular"
+>
+  <div class="demo-area">
+    <GravityLettersIsland client:only="svelte" />
+  </div>
+
+  <div class="demo-info">
+    <div class="info-card">
+      <h3>What this demonstrates</h3>
+      <p>
+        The seamless transition between "text as layout" and "text as physics objects."
+        Pretext computes the exact position of every character. Each character then becomes an
+        independent particle with velocity, gravity, and collision. The Reset button proves
+        that Pretext knows exactly where every character belongs.
+      </p>
+    </div>
+    <div class="info-card">
+      <h3>Relevant Pretext API</h3>
+      <ul>
+        <li><code>prepareWithSegments()</code> — analyze text for layout</li>
+        <li><code>layoutWithLines()</code> — get line text for character position extraction</li>
+      </ul>
+    </div>
+    <div class="info-card">
+      <h3>Try these</h3>
+      <p>
+        Click <strong>Explode</strong> to blast all letters outward from the center.
+        Click <strong>Shake</strong> for an earthquake effect.
+        Try different gravity directions. Then click <strong>Reset</strong> to reassemble.
+      </p>
+    </div>
+  </div>
+</DemoLayout>

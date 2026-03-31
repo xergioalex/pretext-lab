@@ -140,6 +140,36 @@ export const demos: DemoMeta[] = [
     apis: ['prepareWithSegments()', 'layoutNextLine()'],
     difficulty: 'Spectacular',
   },
+  {
+    slug: 'text-breakout',
+    title: 'Text Breakout',
+    summary: 'Classic Breakout, but the bricks are words. Smash them and watch text reflow live.',
+    category: 'spectacular',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutWithLines()'],
+    difficulty: 'Game',
+  },
+  {
+    slug: 'gravity-letters',
+    title: 'Gravity Letters',
+    summary: 'Letters fall, bounce, and explode with physics — then reassemble into readable text.',
+    category: 'spectacular',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutWithLines()'],
+    difficulty: 'Spectacular',
+  },
+  {
+    slug: 'text-vortex',
+    title: 'Text Vortex',
+    summary: 'Characters spin in a colorful vortex, then smoothly reassemble into readable text.',
+    category: 'spectacular',
+    featured: true,
+    flagship: false,
+    apis: ['prepareWithSegments()', 'layoutWithLines()'],
+    difficulty: 'Spectacular',
+  },
 ];
 
 export function getFeaturedDemos(): DemoMeta[] {
