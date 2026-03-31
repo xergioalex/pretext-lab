@@ -13,7 +13,6 @@ const base = import.meta.env.BASE_URL;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 const umamiWebsiteId = import.meta.env.PUBLIC_UMAMI_WEBSITE_ID || '';
-const umamiScriptUrl = import.meta.env.PUBLIC_UMAMI_SCRIPT_URL || 'https://cloud.umami.is/script.js';
 ---
 
 <!doctype html>
@@ -46,7 +45,7 @@ const umamiScriptUrl = import.meta.env.PUBLIC_UMAMI_SCRIPT_URL || 'https://cloud
 
   {/* Umami Analytics */}
   {umamiWebsiteId && (
-    <script defer src={umamiScriptUrl} data-website-id={umamiWebsiteId} is:inline></script>
+    <script defer src="https://cloud.umami.is/script.js" data-website-id={umamiWebsiteId} is:inline></script>
   )}
 
   <!-- Theme: apply before render to prevent flash -->
