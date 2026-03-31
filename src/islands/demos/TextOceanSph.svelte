@@ -6,15 +6,15 @@
 
   let canvas: HTMLCanvasElement;
   let wrapperWidth = $state(0);
-  let canvasWidth = $derived(wrapperWidth > 0 ? wrapperWidth : 900);
-  const canvasHeight = 600;
+  let canvasWidth = $derived(wrapperWidth > 0 ? Math.floor(wrapperWidth * 0.55) : 500);
+  const canvasHeight = 450;
 
   // Controls
   let gravity = $state(280);
   let pressure = $state(45);
   let viscosity = $state(0.9);
   let waveForce = $state(60);
-  let particleCount = $state(2500);
+  let particleCount = $state(7500);
   let mouseRepel = $state(true);
   let animFrame = 0;
   let currentCanvasWidth = 0;
@@ -365,7 +365,7 @@
   .stats-row { display: flex; flex-wrap: wrap; gap: 8px; }
   .stat-pill { font-size: 0.75rem; color: var(--text-muted); padding: 3px 10px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 9999px; }
   .stat-pill.accent { color: var(--accent); border-color: var(--border-accent); }
-  .canvas-wrap { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.25); }
+  .canvas-wrap { border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; box-shadow: 0 8px 40px rgba(0,0,0,0.25); margin: 0 auto; }
   canvas { display: block; width: 100%; }
   @media (max-width: 600px) { .ctrl { min-width: 60px; } .controls-bar { gap: var(--space-sm); } }
 </style>
