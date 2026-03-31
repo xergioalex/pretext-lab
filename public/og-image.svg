@@ -1,4 +1,4 @@
-<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="1200" height="630" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0a0a0f"/>
@@ -9,43 +9,38 @@
       <stop offset="0%" stop-color="#7c6cf0" stop-opacity="0.12"/>
       <stop offset="100%" stop-color="#7c6cf0" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="glow2" cx="30%" cy="60%" r="35%">
-      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
-    </radialGradient>
   </defs>
 
   <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
-  <rect width="1200" height="630" fill="url(#glow2)"/>
 
   <!-- Top accent bar -->
   <rect width="1200" height="3" fill="#7c6cf0" opacity="0.8"/>
 
-  <!-- Subtitle -->
-  <text x="600" y="370" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="30" fill="#9898a8" text-anchor="middle" letter-spacing="0.5">Programmable Text Layout for the Web</text>
+  <!-- Subtitle — larger, brighter -->
+  <text x="600" y="380" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="36" font-weight="500" fill="#c8c8d4" text-anchor="middle" letter-spacing="0.3">Programmable Text Layout for the Web</text>
 
-  <!-- Description -->
-  <text x="600" y="420" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" fill="#5c5c6e" text-anchor="middle">28 interactive demos — prepare() once, layout() at any width instantly</text>
+  <!-- Demo count — larger, brighter -->
+  <text x="600" y="430" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="24" fill="#8888a0" text-anchor="middle">28 interactive demos — prepare() once, layout() at any width instantly</text>
 
-  <!-- API tags row -->
-  <rect x="258" y="455" width="120" height="30" rx="6" fill="#1a1a26" stroke="#2a2a3a" stroke-width="1"/>
-  <text x="318" y="475" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="13" fill="#7c6cf0" text-anchor="middle">prepare()</text>
+  <!-- API tags row — bigger pills, brighter text -->
+  <rect x="215" y="462" width="140" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="285" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">prepare()</text>
 
-  <rect x="393" y="455" width="105" height="30" rx="6" fill="#1a1a26" stroke="#2a2a3a" stroke-width="1"/>
-  <text x="445" y="475" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="13" fill="#7c6cf0" text-anchor="middle">layout()</text>
+  <rect x="370" y="462" width="125" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="432" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">layout()</text>
 
-  <rect x="513" y="455" width="165" height="30" rx="6" fill="#1a1a26" stroke="#2a2a3a" stroke-width="1"/>
-  <text x="595" y="475" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="13" fill="#7c6cf0" text-anchor="middle">layoutNextLine()</text>
+  <rect x="510" y="462" width="190" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="605" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">layoutNextLine()</text>
 
-  <rect x="693" y="455" width="165" height="30" rx="6" fill="#1a1a26" stroke="#2a2a3a" stroke-width="1"/>
-  <text x="775" y="475" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="13" fill="#7c6cf0" text-anchor="middle">layoutWithLines()</text>
+  <rect x="715" y="462" width="195" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="812" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">layoutWithLines()</text>
 
-  <!-- Footer -->
-  <line x1="80" y1="560" x2="1120" y2="560" stroke="#1a1a26" stroke-width="1"/>
-  <text x="80" y="590" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="16" fill="#5c5c6e">pretext.xergioalex.com</text>
-  <text x="1120" y="590" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="16" fill="#5c5c6e" text-anchor="end">by XergioAleX</text>
+  <!-- Footer — larger, brighter -->
+  <line x1="80" y1="556" x2="1120" y2="556" stroke="#1e1e2e" stroke-width="1"/>
+  <text x="80" y="590" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" fill="#787890">pretext.xergioalex.com</text>
+  <text x="1120" y="590" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" fill="#787890" text-anchor="end">by XergioAleX</text>
 
   <!-- Bottom accent bar -->
   <rect y="627" width="1200" height="3" fill="#7c6cf0" opacity="0.8"/>
