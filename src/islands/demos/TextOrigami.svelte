@@ -1,40 +1,58 @@
 <script lang="ts">
   import { buildFont, SAMPLE_TEXTS } from '../../lib/pretext';
   import { clamp, flowTextThroughRegions, lerp } from '../../lib/advanced-demos/layout';
+  import { untrack } from 'svelte';
 
   let wrapperWidth = $state(0);
   let folds = $state(58);
   let panels = $state(4);
   let showCreases = $state(true);
 
-  let panelLayout = $state<Array<{ id: string; x: number; y: number; width: number; height: number; angle: number }>>([]);
+  interface PanelLine {
+    text: string;
+    x: number;
+    y: number;
+  }
+
+  interface PanelLayout {
+    id: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    angle: number;
+    lines: PanelLine[];
+  }
+
+  let panelLayout = $state<PanelLayout[]>([]);
   let lines = $state<Array<{ text: string; x: number; y: number; regionId: string }>>([]);
 
   const text = `${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.long} ${SAMPLE_TEXTS.medium} ${SAMPLE_TEXTS.editorial} ${SAMPLE_TEXTS.long}`;
 
   function recompute() {
-    const width = Math.max(320, Math.min(wrapperWidth || 980, 1020));
+    const width = Math.max(320, Math.min(wrapperWidth > 0 ? wrapperWidth : 980, 1020));
     const panelGap = 12;
     const margin = 28;
     const height = 440;
-    const panelWidth = Math.floor((width - margin * 2 - panelGap * (panels - 1)) / panels);
+    const panelWidth = Math.max(120, Math.floor((width - margin * 2 - panelGap * (panels - 1)) / panels));
     const lineHeight = 24;
     const font = buildFont(15, 'Georgia, Times New Roman, serif');
 
-    panelLayout = Array.from({ length: panels }, (_, index) => ({
+    const nextPanels = Array.from({ length: panels }, (_, index) => ({
       id: `panel-${index}`,
       x: margin + index * (panelWidth + panelGap),
       y: 30,
       width: panelWidth,
       height,
       angle: lerp(-55, 55, panels === 1 ? 0.5 : index / (panels - 1)) * (folds / 100),
+      lines: [] as PanelLine[],
     }));
 
     const flowed = flowTextThroughRegions(
       text,
       font,
       lineHeight,
-      panelLayout.map((panel) => ({
+      nextPanels.map((panel) => ({
         id: panel.id,
         x: panel.x + 14,
         y: panel.y + 64,
@@ -49,13 +67,26 @@
       y: line.y,
       regionId: line.regionId,
     }));
+
+    for (const line of lines) {
+      const panel = nextPanels.find((entry) => entry.id === line.regionId);
+      if (panel) {
+        panel.lines.push({
+          text: line.text,
+          x: line.x - panel.x,
+          y: line.y - panel.y,
+        });
+      }
+    }
+
+    panelLayout = nextPanels;
   }
 
   $effect(() => {
     wrapperWidth;
     folds;
     panels;
-    recompute();
+    untrack(() => recompute());
   });
 </script>
 
@@ -89,8 +120,8 @@
           <div class="crease"></div>
         {/if}
 
-        {#each lines.filter((line) => line.regionId === panel.id) as line}
-          <div class="panel-line" style={`left:${line.x - panel.x}px;top:${line.y - panel.y}px;`}>
+        {#each panel.lines as line}
+          <div class="panel-line" style={`left:${line.x}px;top:${line.y}px;`}>
             {line.text}
           </div>
         {/each}
@@ -100,7 +131,7 @@
 </div>
 
 <style>
-  .origami-demo { display: flex; flex-direction: column; gap: var(--space-md); }
+  .origami-demo { display: flex; flex-direction: column; gap: var(--space-md); width: 100%; min-width: 0; }
   .controls-bar { display: flex; flex-wrap: wrap; gap: var(--space-md); align-items: end; }
   .ctrl { display: flex; flex-direction: column; gap: 4px; min-width: 140px; }
   .ctrl label {
@@ -127,6 +158,7 @@
     border: 1px solid var(--border); background:
       radial-gradient(circle at top, rgba(124,108,240,0.16), transparent 24%),
       linear-gradient(180deg, #12141c, #0c0f16 42%, #0a0d12);
+    width: 100%;
   }
   .paper-panel {
     position: absolute; overflow: hidden; transform-style: preserve-3d;
