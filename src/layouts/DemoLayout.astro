@@ -1,8 +1,10 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import DemoSwitcherIsland from '../islands/DemoSwitcher.svelte';
 
 interface Props {
   title: string;
+  slug: string;
   summary: string;
   context: string;
   apis: string[];
@@ -10,39 +12,8 @@ interface Props {
   snippet?: string;
 }
 
-const { title, summary, context, apis, difficulty, snippet } = Astro.props;
+const { title, slug, summary, context, apis, difficulty, snippet } = Astro.props;
 const base = import.meta.env.BASE_URL;
-
-const allDemos = [
-  { slug: 'measure-height', label: '📐 Measure Height' },
-  { slug: 'resize-relayout', label: '↔️ Resize Relayout' },
-  { slug: 'shrink-wrap', label: '📦 Shrink-Wrap' },
-  { slug: 'flow-around-obstacle', label: '🌊 Flow Around Obstacle' },
-  { slug: 'masonry-cards', label: '🧱 Masonry Cards' },
-  { slug: 'chat-bubbles', label: '💬 Chat Bubbles' },
-  { slug: 'rich-text-lines', label: '✨ Rich Text Lines' },
-  { slug: 'canvas-layout', label: '🎨 Canvas Layout' },
-  { slug: 'i18n-stress', label: '🌍 i18n Stress Test' },
-  { slug: 'dom-vs-pretext', label: '⚡ DOM vs Pretext' },
-  { slug: 'editorial-engine', label: '📰 Editorial Engine' },
-  { slug: 'dragon-chase', label: '🐉 Dragon Chase' },
-  { slug: 'wave-distortion', label: '🌊 Wave Distortion' },
-  { slug: 'text-breakout', label: '🎮 Text Breakout' },
-  { slug: 'gravity-letters', label: '🪨 Gravity Letters' },
-  { slug: 'text-vortex', label: '🌀 Text Vortex' },
-  { slug: 'text-silhouette', label: '🖤 Silhouette Fill' },
-  { slug: 'multi-column', label: '📰 Multi-Column Magazine' },
-  { slug: 'text-waterfall', label: '💧 Text Waterfall' },
-  { slug: 'text-hourglass', label: '⏳ Text Hourglass' },
-  { slug: 'audio-reactive', label: '🎵 Audio-Reactive' },
-  { slug: 'text-terrain', label: '🗺️ Text Terrain Map' },
-  { slug: 'typographic-heatmap', label: '🌡️ Typographic Heatmap' },
-  { slug: 'voronoi-text', label: '🔷 Voronoi Text Cells' },
-  { slug: 'text-rain', label: '🌧️ Text Rain' },
-  { slug: 'text-collision', label: '💥 Text Collision World' },
-  { slug: 'text-earthquake', label: '🌋 Text Earthquake' },
-  { slug: 'streaming-text', label: '⚡ Streaming Prediction' },
-];
 ---
 
 <BaseLayout title={`${title} — Pretext Lab`} description={summary}>
@@ -53,7 +24,6 @@ const allDemos = [
       <button class="topbar-title-btn" id="demos-dropdown-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         <span class="topbar-title">{title}</span>
-        <svg class="topbar-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </button>
       <span class="topbar-badge">{difficulty}</span>
       <button class="topbar-btn" id="info-open-btn">
@@ -70,22 +40,8 @@ const allDemos = [
     </div>
   </div>
 
-  <!-- Demos dropdown (fixed, outside topbar for z-index) -->
-  <div class="dd-overlay" id="dd-overlay">
-    <div class="dd-panel" id="demos-dropdown-menu">
-      <div class="dd-header">
-        <span class="dd-label">Switch demo</span>
-        <button class="dd-close" id="dd-close-btn">&times;</button>
-      </div>
-      <div class="dd-list">
-        {allDemos.map((d) => (
-          <a href={`${base}demos/${d.slug}/`} class:list={['dd-item', { active: d.label.includes(title) }]}>
-            {d.label}
-          </a>
-        ))}
-      </div>
-    </div>
-  </div>
+  <!-- Shared demo switcher modal -->
+  <DemoSwitcherIsland client:only="svelte" baseUrl={base} currentSlug={slug} />
 
   <!-- Info modal -->
   <div class="info-modal-overlay" id="info-modal" aria-hidden="true">
@@ -200,104 +156,7 @@ const allDemos = [
     white-space: nowrap;
   }
 
-  .topbar-caret {
-    flex-shrink: 0;
-    color: var(--text-muted);
-  }
 
-  /* Demos dropdown overlay (fixed) */
-  .dd-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 10000;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    padding-top: 60px;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.2s ease;
-  }
-
-  .dd-overlay.open {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .dd-panel {
-    background: var(--bg-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    width: 320px;
-    max-height: 75vh;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-    transform: translateY(-10px) scale(0.97);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-
-  .dd-overlay.open .dd-panel {
-    transform: translateY(0) scale(1);
-  }
-
-  .dd-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .dd-label {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-  }
-
-  .dd-close {
-    background: none;
-    border: none;
-    color: var(--text-muted);
-    font-size: 1.2rem;
-    cursor: pointer;
-    padding: 0 4px;
-    line-height: 1;
-    transition: color var(--transition-fast);
-  }
-  .dd-close:hover { color: var(--accent); }
-
-  .dd-list {
-    overflow-y: auto;
-    padding: var(--space-xs);
-  }
-
-  .dd-item {
-    display: block;
-    padding: 8px 14px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    white-space: nowrap;
-  }
-
-  .dd-item:hover {
-    background: var(--bg-card);
-    color: var(--text-primary);
-  }
-
-  .dd-item.active {
-    color: var(--accent);
-    font-weight: 600;
-    background: var(--accent-dim);
-  }
 
   .topbar-btn {
     display: flex; align-items: center; gap: 5px;
@@ -520,27 +379,16 @@ const allDemos = [
 
   // Close on Escape
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (ddOverlay.classList.contains('open')) { closeDemos(); return; }
-      if (modal.classList.contains('open')) {
-        modal.classList.remove('open');
-        modal.setAttribute('aria-hidden', 'true');
-      }
+    if (e.key === 'Escape' && modal.classList.contains('open')) {
+      modal.classList.remove('open');
+      modal.setAttribute('aria-hidden', 'true');
     }
   });
 
-  // Demos dropdown
+  // Demos dropdown — dispatch event to Svelte DemoSwitcher
   const ddBtn = document.getElementById('demos-dropdown-btn')!;
-  const ddOverlay = document.getElementById('dd-overlay')!;
-  const ddCloseBtn = document.getElementById('dd-close-btn')!;
-
-  function openDemos() { ddOverlay.classList.add('open'); }
-  function closeDemos() { ddOverlay.classList.remove('open'); }
-
-  ddBtn.addEventListener('click', openDemos);
-  ddCloseBtn.addEventListener('click', closeDemos);
-  ddOverlay.addEventListener('click', (e) => {
-    if (e.target === ddOverlay) closeDemos();
+  ddBtn.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('open-demo-switcher'));
   });
 
   // Theme toggle

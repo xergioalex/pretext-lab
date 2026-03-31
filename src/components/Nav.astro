@@ -1,36 +1,5 @@
 ---
 const base = import.meta.env.BASE_URL;
-
-const demos = [
-  { slug: 'measure-height', title: '📐 Measure Height' },
-  { slug: 'resize-relayout', title: '↔️ Resize Relayout' },
-  { slug: 'shrink-wrap', title: '📦 Shrink-Wrap' },
-  { slug: 'flow-around-obstacle', title: '🌊 Flow Around Obstacle' },
-  { slug: 'masonry-cards', title: '🧱 Masonry Cards' },
-  { slug: 'chat-bubbles', title: '💬 Chat Bubbles' },
-  { slug: 'rich-text-lines', title: '✨ Rich Text Lines' },
-  { slug: 'canvas-layout', title: '🎨 Canvas Layout' },
-  { slug: 'i18n-stress', title: '🌍 i18n Stress Test' },
-  { slug: 'dom-vs-pretext', title: '⚡ DOM vs Pretext' },
-  { slug: 'editorial-engine', title: '📰 Editorial Engine' },
-  { slug: 'dragon-chase', title: '🐉 Dragon Chase' },
-  { slug: 'wave-distortion', title: '🌊 Wave Distortion' },
-  { slug: 'text-breakout', title: '🎮 Text Breakout' },
-  { slug: 'gravity-letters', title: '🪨 Gravity Letters' },
-  { slug: 'text-vortex', title: '🌀 Text Vortex' },
-  { slug: 'text-silhouette', title: '🖤 Silhouette Fill' },
-  { slug: 'multi-column', title: '📰 Multi-Column Magazine' },
-  { slug: 'text-waterfall', title: '💧 Text Waterfall' },
-  { slug: 'text-hourglass', title: '⏳ Text Hourglass' },
-  { slug: 'audio-reactive', title: '🎵 Audio-Reactive' },
-  { slug: 'text-terrain', title: '🗺️ Text Terrain Map' },
-  { slug: 'typographic-heatmap', title: '🌡️ Typographic Heatmap' },
-  { slug: 'voronoi-text', title: '🔷 Voronoi Text Cells' },
-  { slug: 'text-rain', title: '🌧️ Text Rain' },
-  { slug: 'text-collision', title: '💥 Text Collision World' },
-  { slug: 'text-earthquake', title: '🌋 Text Earthquake' },
-  { slug: 'streaming-text', title: '⚡ Streaming Prediction' },
-];
 ---
 
 <nav class="nav">
@@ -42,16 +11,10 @@ const demos = [
 
     <div class="nav-links">
       <a href={base} class="nav-link">Home</a>
-      <div class="nav-dropdown">
-        <button class="nav-link dropdown-trigger" aria-expanded="false">
-          Demos <span class="caret">▾</span>
-        </button>
-        <div class="dropdown-menu">
-          {demos.map((d) => (
-            <a href={`${base}demos/${d.slug}/`} class="dropdown-item">{d.title}</a>
-          ))}
-        </div>
-      </div>
+      <button class="nav-link dropdown-trigger" id="nav-demos-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Demos
+      </button>
       <button class="theme-toggle" aria-label="Toggle theme" title="Toggle light/dark mode">
         <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -73,10 +36,10 @@ const demos = [
 
 <div class="mobile-menu">
   <a href={base} class="mobile-link">Home</a>
-  <div class="mobile-section-title">Demos</div>
-  {demos.map((d) => (
-    <a href={`${base}demos/${d.slug}/`} class="mobile-link mobile-demo-link">{d.title}</a>
-  ))}
+  <button class="mobile-link mobile-demos-btn" id="mobile-demos-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    Demos
+  </button>
   <a href="https://github.com/xergioalex/pretext-minilab" class="mobile-link" target="_blank" rel="noopener">GitHub</a>
 </div>
 
@@ -146,61 +109,10 @@ const demos = [
     background: var(--bg-card);
   }
 
-  .nav-dropdown {
-    position: relative;
-  }
-
   .dropdown-trigger {
     display: flex;
     align-items: center;
     gap: 4px;
-  }
-
-  .caret {
-    font-size: 0.7em;
-    transition: transform var(--transition-fast);
-  }
-
-  .dropdown-menu {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: var(--space-sm);
-    min-width: 220px;
-    opacity: 0;
-    visibility: hidden;
-    transition: all var(--transition-fast);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-  }
-
-  .nav-dropdown:hover .dropdown-menu,
-  .nav-dropdown:focus-within .dropdown-menu {
-    opacity: 1;
-    visibility: visible;
-  }
-
-  .nav-dropdown:hover .caret {
-    transform: rotate(180deg);
-  }
-
-  .dropdown-item {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    transition: all var(--transition-fast);
-    text-decoration: none;
-    white-space: nowrap;
-  }
-
-  .dropdown-item:hover {
-    color: var(--text-primary);
-    background: var(--bg-card);
   }
 
   .nav-mobile-toggle {
@@ -253,19 +165,16 @@ const demos = [
     background: var(--bg-card);
   }
 
-  .mobile-demo-link {
-    padding-left: var(--space-xl);
-    font-size: 0.9rem;
-  }
-
-  .mobile-section-title {
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    padding: var(--space-md) var(--space-md) var(--space-xs);
-    margin-top: var(--space-sm);
+  .mobile-demos-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+    cursor: pointer;
   }
 
   /* Theme toggle */
@@ -322,6 +231,15 @@ const demos = [
   const menu = document.querySelector('.mobile-menu');
   toggle?.addEventListener('click', () => {
     menu?.classList.toggle('open');
+  });
+
+  // Demos buttons open shared DemoSwitcher modal
+  document.getElementById('nav-demos-btn')?.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('open-demo-switcher'));
+  });
+  document.getElementById('mobile-demos-btn')?.addEventListener('click', () => {
+    menu?.classList.remove('open');
+    window.dispatchEvent(new CustomEvent('open-demo-switcher'));
   });
 
   // Theme toggle
