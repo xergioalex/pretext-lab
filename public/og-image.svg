@@ -18,29 +18,31 @@
   <!-- Top accent bar -->
   <rect width="1200" height="3" fill="#7c6cf0" opacity="0.8"/>
 
-  <!-- Subtitle — larger, brighter -->
-  <text x="600" y="380" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="36" font-weight="500" fill="#c8c8d4" text-anchor="middle" letter-spacing="0.3">Programmable Text Layout for the Web</text>
+  <!-- Subtitle -->
+  <text x="600" y="385" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="40" font-weight="600" fill="#d8d8e4" text-anchor="middle" letter-spacing="0.3">Programmable Text Layout for the Web</text>
 
-  <!-- Demo count — larger, brighter -->
-  <text x="600" y="430" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="24" fill="#8888a0" text-anchor="middle">28 interactive demos — prepare() once, layout() at any width instantly</text>
+  <!-- Demo count -->
+  <text x="600" y="440" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="28" fill="#a0a0b8" text-anchor="middle">28 interactive demos — prepare() once, layout() at any width</text>
 
-  <!-- API tags row — bigger pills, brighter text -->
-  <rect x="215" y="462" width="140" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
-  <text x="285" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">prepare()</text>
+  <!-- API tags row -->
+  <rect x="185" y="470" width="160" height="42" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="265" y="498" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="19" fill="#a99cf8" text-anchor="middle">prepare()</text>
 
-  <rect x="370" y="462" width="125" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
-  <text x="432" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">layout()</text>
+  <rect x="362" y="470" width="145" height="42" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="434" y="498" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="19" fill="#a99cf8" text-anchor="middle">layout()</text>
 
-  <rect x="510" y="462" width="190" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
-  <text x="605" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">layoutNextLine()</text>
+  <rect x="524" y="470" width="210" height="42" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="629" y="498" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="19" fill="#a99cf8" text-anchor="middle">layoutNextLine()</text>
 
-  <rect x="715" y="462" width="195" height="36" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
-  <text x="812" y="486" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="16" fill="#9d90f8" text-anchor="middle">layoutWithLines()</text>
+  <rect x="751" y="470" width="220" height="42" rx="8" fill="#1a1a26" stroke="#3a3a50" stroke-width="1.5"/>
+  <text x="861" y="498" font-family="ui-monospace, 'SFMono-Regular', monospace" font-size="19" fill="#a99cf8" text-anchor="middle">layoutWithLines()</text>
 
-  <!-- Footer — larger, brighter -->
-  <line x1="80" y1="556" x2="1120" y2="556" stroke="#1e1e2e" stroke-width="1"/>
-  <text x="80" y="590" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" fill="#787890">pretext.xergioalex.com</text>
-  <text x="1120" y="590" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="20" fill="#787890" text-anchor="end">by XergioAleX</text>
+  <!-- Footer line -->
+  <line x1="60" y1="558" x2="1140" y2="558" stroke="#1e1e2e" stroke-width="1"/>
+
+  <!-- Footer text -->
+  <text x="60" y="594" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="24" fill="#8888a0">pretext.xergioalex.com</text>
+  <text x="1140" y="594" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="24" fill="#8888a0" text-anchor="end">by Sergio Florez (XergioAleX)</text>
 
   <!-- Bottom accent bar -->
   <rect y="627" width="1200" height="3" fill="#7c6cf0" opacity="0.8"/>
